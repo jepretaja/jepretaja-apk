@@ -25,9 +25,12 @@ import com.jepretaja.app.core.util.SlipPembayaran
 import com.jepretaja.app.data.model.BookingStatus
 import com.jepretaja.app.services.AnalyticsService
 import com.jepretaja.app.ui.components.AppTopBar
+import com.jepretaja.app.ui.components.EmptyState
+import com.jepretaja.app.ui.components.ErrorState
 import com.jepretaja.app.ui.components.InfoRow
 import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.components.SectionHeader
+import com.jepretaja.app.ui.components.SkeletonBox
 import com.jepretaja.app.ui.components.StatusBadge
 import com.jepretaja.app.ui.components.rememberAppTopBarScrollBehavior
 import com.jepretaja.app.ui.state.AuthViewModel
@@ -134,9 +137,18 @@ fun BookingDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         when {
-            loading -> Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = AppColors.Primary) }
-            error != null -> Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) { Text(error!!, color = AppColors.Danger) }
-            booking == null -> Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) { Text("Booking tidak ditemukan") }
+            loading -> BookingDetailSkeleton(Modifier.padding(padding))
+            error != null -> ErrorState(
+                onRetry = { viewModel.observeLive(bookingId) },
+                description = error,
+                modifier = Modifier.padding(padding).fillMaxSize(),
+            )
+            booking == null -> EmptyState(
+                title = "Booking tidak ditemukan",
+                description = "Booking mungkin sudah dihapus atau tautannya tidak lagi berlaku.",
+                icon = Icons.Default.EventBusy,
+                modifier = Modifier.padding(padding).fillMaxSize(),
+            )
             else -> {
                 val b = booking!!
                 val isCreator = b.creatorId == myUid
@@ -277,6 +289,22 @@ fun BookingDetailScreen(
             onDismiss = { showDisputeSheet = false },
             onSubmit = { reason -> showDisputeSheet = false; viewModel.openDispute(bookingId, reason) },
         )
+    }
+}
+
+@Composable
+private fun BookingDetailSkeleton(modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxSize().padding(20.dp)) {
+        SkeletonBox(Modifier.fillMaxWidth(0.4f).height(18.dp))
+        Spacer(Modifier.height(16.dp))
+        PremiumCard(contentPadding = PaddingValues(16.dp), elevation = 3.dp) {
+            repeat(5) { index ->
+                SkeletonBox(Modifier.fillMaxWidth(if (index % 2 == 0) 0.72f else 0.45f).height(16.dp))
+                if (index < 4) Spacer(Modifier.height(18.dp))
+            }
+        }
+        Spacer(Modifier.height(24.dp))
+        SkeletonBox(Modifier.fillMaxWidth().height(52.dp), MaterialTheme.shapes.large)
     }
 }
 

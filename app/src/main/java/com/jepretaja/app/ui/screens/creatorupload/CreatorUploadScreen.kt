@@ -159,8 +159,10 @@ fun CreatorUploadScreen(
     }
 
     LaunchedEffect(message) {
-        if (message != null) {
-            onUploaded()
+        message?.let {
+            // Upload sudah dipindahkan ke WorkManager. Tetap di layar supaya
+            // creator bisa melihat progres atau pesan gagal dari antrean.
+            snackbarHostState.showSnackbar(it)
             viewModel.clearMessage()
         }
     }

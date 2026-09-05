@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.jepretaja.app.core.theme.AppColors
+import com.jepretaja.app.core.theme.AppRadii
 
 /**
  * Bahasa visual bersama untuk seluruh layar ("premium editorial"): kartu
@@ -206,7 +207,7 @@ fun BigPrimaryButton(
     Button(
         onClick = onClick,
         enabled = enabled && !loading,
-        shape = RoundedCornerShape(percent = 50),
+        shape = RoundedCornerShape(AppRadii.pill),
         colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary, contentColor = AppColors.OnPrimary),
         modifier = modifier.fillMaxWidth().height(54.dp),
     ) {
@@ -215,6 +216,69 @@ fun BigPrimaryButton(
         } else {
             Text(text, style = MaterialTheme.typography.titleSmall)
         }
+    }
+}
+
+enum class AppButtonVariant { Primary, Secondary, Outline, Danger }
+
+/** Tombol standar untuk CTA yang tidak membutuhkan layout khusus. */
+@Composable
+fun AppButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    variant: AppButtonVariant = AppButtonVariant.Primary,
+    enabled: Boolean = true,
+    loading: Boolean = false,
+) {
+    val colors = when (variant) {
+        AppButtonVariant.Primary -> ButtonDefaults.buttonColors(
+            containerColor = AppColors.Primary,
+            contentColor = AppColors.OnPrimary,
+        )
+        AppButtonVariant.Secondary -> ButtonDefaults.buttonColors(
+            containerColor = AppColors.SurfaceVariant,
+            contentColor = AppColors.TextPrimary,
+        )
+        AppButtonVariant.Outline -> ButtonDefaults.outlinedButtonColors(
+            contentColor = AppColors.Primary,
+        )
+        AppButtonVariant.Danger -> ButtonDefaults.buttonColors(
+            containerColor = AppColors.Danger,
+            contentColor = AppColors.OnPrimary,
+        )
+    }
+
+    val content: @Composable RowScope.() -> Unit = {
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = LocalContentColor.current,
+                strokeWidth = 2.dp,
+            )
+        } else {
+            Text(text, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+
+    if (variant == AppButtonVariant.Outline) {
+        OutlinedButton(
+            onClick = onClick,
+            enabled = enabled && !loading,
+            colors = colors,
+            shape = RoundedCornerShape(AppRadii.pill),
+            modifier = modifier.height(48.dp),
+            content = content,
+        )
+    } else {
+        Button(
+            onClick = onClick,
+            enabled = enabled && !loading,
+            colors = colors,
+            shape = RoundedCornerShape(AppRadii.pill),
+            modifier = modifier.height(48.dp),
+            content = content,
+        )
     }
 }
 
