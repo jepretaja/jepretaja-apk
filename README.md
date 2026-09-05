@@ -7,7 +7,7 @@ Project ini hanya menulis ulang client Android-nya dengan Kotlin +
 Jetpack Compose, memanggil collection Firestore & Cloud Function callable
 yang identik.
 
-## Status Checkpoint Ini (jujur, bukan diklaim lengkap)
+## Status Android Saat Ini
 
 **Sudah selesai:**
 - Struktur project Gradle (Kotlin DSL) + Hilt DI + Jetpack Compose
@@ -19,24 +19,23 @@ yang identik.
   yang **identik** dengan backend yang sudah ada, termasuk aturan yang sama
   (booking tidak pernah ditulis langsung, hanya lewat callable, dst)
 - Google Sign-In dengan `ActivityResultLauncher` yang benar
-- Layar: Splash, Onboarding, Choose Access, Login, Register Customer,
-  Register Creator, Home (dasar)
-- NavGraph merangkai semua di atas jadi satu alur yang bisa dijalankan
+- Layar autentikasi, Home, Explore, Search, Nearby, Creator Profile, Package
+  Detail, Booking, Payment, Chat, Notifications, Profile, Favorites, Reviews,
+  Help, dan seluruh Creator Dashboard.
+- NavGraph merangkai alur customer dan creator, termasuk upload karya,
+  pengelolaan paket/portfolio/booking, wallet, withdrawal, ketersediaan, dan
+  pengaturan.
+- Build debug otomatis di GitHub Actions dan APK tersedia melalui GitHub
+  Releases.
 
-**BELUM dikerjakan** (repository/backend-nya sudah siap, tinggal buat UI-nya):
-- Explore (fitur inti — fullscreen feed)
-- Search, Nearby, Creator Profile, Package Detail
-- Booking Form/Confirmation/Detail, Payment + WebView
-- Chat List/Room (repository sudah ada read-receipt & block, UI belum)
-- Notifications, My Bookings, My Reviews, Favorites, Profile, Help
-- Seluruh Creator Dashboard (Upload, Kelola Paket/Portfolio/Booking,
-  Wallet, Withdrawal, Availability, Settings)
+### Pekerjaan yang masih perlu diuji atau disempurnakan
 
-Ini **bukan** kelalaian — ini keputusan sadar supaya checkpoint pertama
-benar-benar bisa di-build & dijalankan (alur Auth lengkap) daripada
-setengah jadi di banyak tempat sekaligus. Lanjutkan sesi berikutnya untuk
-melengkapi sisanya, dengan pola yang sama seperti versi Flutter dulu
-dikerjakan bertahap.
+- Uji end-to-end pada perangkat Android nyata untuk login Google, upload media,
+  booking, pembayaran, chat, notifikasi, dan withdrawal.
+- Konfigurasi production Firebase, Cloudinary, dan endpoint Vercel di secret
+  atau `gradle.properties` sebelum distribusi luas.
+- APK Release bertanda tangan keystore pribadi untuk pembaruan dan distribusi
+  production. APK GitHub Release saat ini adalah debug build untuk pengujian.
 
 ## Setup
 
