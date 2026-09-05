@@ -51,6 +51,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+          validate-wrappers: false
 
       # Cloudinary menggantikan Firebase Storage untuk upload foto/video.
       # Keduanya bukan rahasia (cloud name & nama unsigned preset memang
@@ -68,7 +71,7 @@ jobs:
           if [ -z "$API_BASE_URL" ]; then
             echo "::warning::Secret API_BASE_URL belum diisi. APK akan dibuat, tetapi fitur server belum dapat dipakai."
           fi
-          chmod +x gradlew && ./gradlew assembleDebug --no-daemon --stacktrace
+          gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
