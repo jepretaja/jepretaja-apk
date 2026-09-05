@@ -65,17 +65,12 @@ jobs:
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
           CLOUDINARY_UPLOAD_PRESET: ${{ secrets.CLOUDINARY_UPLOAD_PRESET }}
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           if [ -z "$CLOUDINARY_CLOUD_NAME" ] || [ -z "$CLOUDINARY_UPLOAD_PRESET" ]; then
             echo "::warning::Secret Cloudinary belum diisi. APK tetap jadi, tapi upload foto/video akan gagal saat dipakai."
           fi
           if [ -z "$API_BASE_URL" ]; then
             echo "::warning::Secret API_BASE_URL belum diisi. APK akan dibuat, tetapi fitur server belum dapat dipakai."
-          fi
-          if [ -z "$MAPS_API_KEY" ]; then
-            echo "::error::Secret MAPS_API_KEY belum diisi. Aktifkan Maps SDK for Android dan tambahkan key yang dibatasi package/SHA-1."
-            exit 1
           fi
           gradle assembleDebug --no-daemon --stacktrace --max-workers=2
 

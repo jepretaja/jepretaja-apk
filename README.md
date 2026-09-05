@@ -39,26 +39,13 @@ yang identik.
 
 ## Setup
 
-### Google Maps
+### Lokasi tanpa Google Maps berbayar
 
-Manifest Android memakai `MAPS_API_KEY` saat build. Placeholder tidak lagi
-diterima, sehingga build akan berhenti jika key belum diisi.
-
-Di Google Cloud Console pada project Firebase yang sama:
-
-1. Aktifkan **Maps SDK for Android**.
-2. Aktifkan **Geocoding API** jika fitur alamat/geocoding digunakan.
-3. Aktifkan **Places API** jika fitur pencarian tempat digunakan.
-4. Pastikan billing/project configuration Google Maps sudah sesuai kebijakan
-  Google Cloud.
-5. Buat API key khusus Android dan batasi dengan **Android apps**:
-  package name `com.jepretaja.app` serta SHA-1/SHA-256 fingerprint debug dan
-  release yang dipakai. Batasi API key hanya ke API yang benar-benar dipakai.
-
-Untuk build lokal, isi `MAPS_API_KEY` di `gradle.properties` lokal dan jangan
-commit nilai key ke repository publik. Untuk GitHub Actions, buat repository
-secret bernama `MAPS_API_KEY` di **Settings → Secrets and variables → Actions**.
-Workflow akan menghentikan build jika secret tersebut kosong.
+Aplikasi tidak memakai Google Maps SDK atau `GoogleMap`. Pemilihan lokasi dan
+geocoding menggunakan Android `Geocoder` bawaan perangkat melalui
+`GeocoderHelper`, sehingga tidak membutuhkan API key, kartu, billing, atau
+secret tambahan. Hasil geocoding bergantung pada layanan lokasi yang tersedia
+di perangkat dan koneksi internetnya.
 
 ### 1. Firebase — pakai project YANG SAMA dengan versi Flutter (kalau ada)
 

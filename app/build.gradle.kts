@@ -36,17 +36,6 @@ val apiBaseUrl: String =
     (project.findProperty("API_BASE_URL") as String?)
         ?: System.getenv("API_BASE_URL") ?: ""
 
-val mapsApiKey: String =
-    (project.findProperty("MAPS_API_KEY") as String?)
-        ?: System.getenv("MAPS_API_KEY") ?: ""
-
-if (mapsApiKey.isBlank()) {
-    throw GradleException(
-        "MAPS_API_KEY belum diisi. Tambahkan MAPS_API_KEY di gradle.properties " +
-            "atau sebagai secret GitHub Actions sebelum build APK."
-    )
-}
-
 android {
     namespace = "com.jepretaja.app"
     compileSdk = 35
@@ -64,7 +53,6 @@ android {
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
         buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudinaryUploadPreset\"")
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
-        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     // Kunci penandatanganan dibaca dari keystore.properties yang TIDAK ikut
