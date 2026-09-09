@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.jepretaja.app.core.theme.AppColors
+import com.jepretaja.app.core.theme.AppSpacing
 import com.jepretaja.app.core.theme.AppRadii
 
 /**
@@ -56,7 +57,7 @@ fun PremiumCard(
     elevation: androidx.compose.ui.unit.Dp = 6.dp,
     color: Color = AppColors.Surface,
     onClick: (() -> Unit)? = null,
-    contentPadding: androidx.compose.foundation.layout.PaddingValues = PaddingValues(16.dp),
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = PaddingValues(AppSpacing.lg),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val base = modifier
@@ -79,7 +80,7 @@ fun SectionHeader(
     onAction: (() -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = AppSpacing.xl),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -111,7 +112,7 @@ fun GradientHeroCard(
             .premiumShadow(14.dp, shape)
             .clip(shape)
             .background(Brush.linearGradient(colors, start = Offset(0f, 0f), end = Offset(1000f, 1000f)))
-            .padding(20.dp),
+            .padding(AppSpacing.xl),
         content = content,
     )
 }
@@ -125,7 +126,7 @@ fun StatTile(
     modifier: Modifier = Modifier,
     tint: Color = AppColors.Primary,
 ) {
-    PremiumCard(modifier = modifier, elevation = 3.dp, contentPadding = PaddingValues(14.dp)) {
+    PremiumCard(modifier = modifier, elevation = 3.dp, contentPadding = PaddingValues(AppSpacing.md)) {
         Box(
             Modifier.size(36.dp).clip(CircleShape).background(tint.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center,

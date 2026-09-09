@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Search
 import com.jepretaja.app.ui.components.AppAvatar
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -44,6 +45,7 @@ fun ExploreScreen(
     authViewModel: AuthViewModel,
     onCreatorClick: (String) -> Unit,
     onCommentClick: (String) -> Unit,
+    onSearch: () -> Unit = {},
     onPackageClick: (String) -> Unit = {},
     /** [isCategory] true untuk kategori resmi, false untuk tagar bebas. */
     onTagClick: (String, Boolean) -> Unit = { _, _ -> },
@@ -329,6 +331,13 @@ fun ExploreScreen(
                     ),
                 )
             }
+        }
+        IconButton(
+            onClick = onSearch,
+            modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(end = 12.dp, top = 8.dp)
+                .background(Color.Black.copy(alpha = 0.42f), RoundedCornerShape(percent = 50)),
+        ) {
+            Icon(Icons.Default.Search, contentDescription = "Cari Explore", tint = Color.White)
         }
     }
 

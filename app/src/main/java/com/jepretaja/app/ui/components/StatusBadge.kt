@@ -23,8 +23,16 @@ fun StatusBadge(status: String) {
     }
     // Badge selalu pill (fully-rounded) terlepas dari skala radius kartu —
     // konvensi umum: status chip tidak ikut skala sudut permukaan.
+    val label = when (status.lowercase()) {
+        "pending_payment", "pending" -> "Menunggu"
+        "paid", "confirmed", "upcoming" -> "Dikonfirmasi"
+        "rejected" -> "Ditolak"
+        "completed", "customer_confirmed", "funds_released", "reviewed" -> "Selesai"
+        "cancelled" -> "Dibatalkan"
+        else -> status.replace("_", " ").replaceFirstChar { it.uppercase() }
+    }
     Text(
-        status.replace("_", " ").uppercase(),
+        label,
         color = color, style = MaterialTheme.typography.labelSmall,
         modifier = Modifier.clip(RoundedCornerShape(percent = 50)).background(color.copy(alpha = 0.12f)).padding(horizontal = 10.dp, vertical = 4.dp),
     )

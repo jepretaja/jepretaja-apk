@@ -1099,7 +1099,7 @@ private fun BilahAksi(creator: CreatorModel, onBooking: () -> Unit, onChat: () -
 @Composable
 private fun KerangkaProfil(modifier: Modifier = Modifier) {
     Column(modifier.fillMaxSize()) {
-        SkeletonBox(Modifier.fillMaxWidth().height(220.dp), RoundedCornerShape(0.dp))
+        SkeletonBox(Modifier.fillMaxWidth().aspectRatio(16f / 9f), RoundedCornerShape(0.dp))
         Column(Modifier.padding(20.dp)) {
             SkeletonBox(Modifier.size(108.dp), CircleShape)
             Spacer(Modifier.height(14.dp))

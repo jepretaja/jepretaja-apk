@@ -9,6 +9,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -74,7 +75,10 @@ import com.jepretaja.app.ui.state.AuthViewModel
  * Paket/Portfolio/Booking, Wallet, Withdrawal, Availability, Settings).
  */
 @Composable
-fun JepretAjaNavGraph(navController: NavHostController = rememberNavController()) {
+fun JepretAjaNavGraph(
+    navController: NavHostController = rememberNavController(),
+    modifier: Modifier = Modifier,
+) {
     val authViewModel: AuthViewModel = hiltViewModel()
 
     // Transisi antar layar: geser halus + fade, bukan potongan mendadak bawaan
@@ -86,6 +90,7 @@ fun JepretAjaNavGraph(navController: NavHostController = rememberNavController()
 
     NavHost(
         navController = navController,
+        modifier = modifier,
         startDestination = Routes.SPLASH,
         enterTransition = {
             slideInHorizontally(

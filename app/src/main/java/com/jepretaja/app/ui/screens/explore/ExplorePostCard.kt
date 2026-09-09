@@ -33,7 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.core.util.Formatters
 import com.jepretaja.app.data.model.ExplorePostModel
@@ -129,11 +129,13 @@ fun ExplorePostCard(
             val statePager = rememberPagerState(pageCount = { post.mediaUrls.size })
             Box(mediaModifier) {
                 HorizontalPager(state = statePager, modifier = Modifier.fillMaxSize()) { halaman ->
-                    AsyncImage(
+                    SubcomposeAsyncImage(
                         model = post.mediaUrls[halaman],
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
+                        loading = { MediaLoading() },
+                        error = { MediaError() },
                     )
                 }
                 Row(
@@ -152,11 +154,13 @@ fun ExplorePostCard(
                 }
             }
         } else {
-            AsyncImage(
+            SubcomposeAsyncImage(
                 model = post.thumbnailUrl ?: post.mediaUrls.firstOrNull(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = mediaModifier,
+                loading = { MediaLoading() },
+                error = { MediaError() },
             )
         }
 
@@ -475,6 +479,20 @@ fun ExplorePostCard(
             },
             dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text("Batal") } },
         )
+    }
+}
+
+@Composable
+private fun MediaLoading() {
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(28.dp))
+    }
+}
+
+@Composable
+private fun MediaError() {
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.42f)), contentAlignment = Alignment.Center) {
+        Text("Media tidak dapat dimuat", color = Color.White, style = MaterialTheme.typography.labelMedium)
     }
 }
 

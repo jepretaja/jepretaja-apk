@@ -90,6 +90,7 @@ fun ProfileScreen(
     onSaved: () -> Unit = {},
     onChat: () -> Unit = {},
     onCreatorStudio: () -> Unit = {},
+    onCreateWork: () -> Unit = {},
     onPostClick: (String) -> Unit = {},
     /** [tab]: 0 = Mengikuti, 1 = Pengikut. */
     onFollowList: (Int) -> Unit = {},
@@ -98,6 +99,21 @@ fun ProfileScreen(
     onWatchHistory: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
+    ModernProfileScreen(
+        onLogin = onLogin,
+        onMyBookings = onMyBookings,
+        onNotifications = onNotifications,
+        onHelp = onHelp,
+        onInterests = onInterests,
+        onWatchHistory = onWatchHistory,
+        onEditProfile = onEditProfile,
+        onPostClick = onPostClick,
+        onCreateWork = onCreateWork,
+        authViewModel = authViewModel,
+        viewModel = viewModel,
+    )
+    return
+
     val authState by authViewModel.uiState.collectAsState()
     val uid = authState.uid
 

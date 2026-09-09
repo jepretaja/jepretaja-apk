@@ -78,6 +78,10 @@ class BookingRepository @Inject constructor(
         api.call(CloudFunctions.START_SERVICE, mapOf("bookingId" to bookingId))
     }
 
+    suspend fun confirmBooking(bookingId: String) {
+        api.call(CloudFunctions.CONFIRM_BOOKING, mapOf("bookingId" to bookingId))
+    }
+
     suspend fun markServiceCompleted(bookingId: String) {
         api.call(CloudFunctions.MARK_SERVICE_COMPLETED, mapOf("bookingId" to bookingId))
     }

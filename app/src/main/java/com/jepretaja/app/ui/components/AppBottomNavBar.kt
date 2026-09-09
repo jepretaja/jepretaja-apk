@@ -46,7 +46,12 @@ fun AppBottomNavBar(
     centerAction: (() -> Unit)? = null,
     centerActionLabel: String = "Unggah",
 ) {
-    Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp)) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -63,21 +68,30 @@ fun AppBottomNavBar(
             val middle = tabs.size / 2
             tabs.forEachIndexed { index, tab ->
                 if (centerAction != null && index == middle) {
-                    CenterUploadButton(label = centerActionLabel, onClick = centerAction)
+                    CenterUploadButton(
+                        label = centerActionLabel,
+                        onClick = centerAction,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
-                NavItem(tab = tab, selected = currentRoute == tab.route, onClick = { onSelect(tab.route) })
+                NavItem(
+                    tab = tab,
+                    selected = currentRoute == tab.route,
+                    onClick = { onSelect(tab.route) },
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun NavItem(tab: NavTab, selected: Boolean, onClick: () -> Unit) {
+private fun NavItem(tab: NavTab, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val indicatorColor by animateColorAsState(if (selected) AppColors.PrimarySoft else Color.Transparent, label = "navIndicator")
     val contentColor by animateColorAsState(if (selected) AppColors.Primary else AppColors.TextSecondary, label = "navContent")
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = false),
@@ -95,10 +109,10 @@ private fun NavItem(tab: NavTab, selected: Boolean, onClick: () -> Unit) {
 
 /** Tombol unggah creator — lingkaran gradient yang sedikit menonjol ke atas. */
 @Composable
-private fun CenterUploadButton(label: String, onClick: () -> Unit) {
+private fun CenterUploadButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = false),

@@ -92,6 +92,7 @@ class BookingDetailViewModel @Inject constructor(
     }
 
     fun startService(bookingId: String) = runAction { bookingRepository.startService(bookingId) }
+    fun confirmBooking(bookingId: String) = runAction { bookingRepository.confirmBooking(bookingId) }
     fun markServiceCompleted(bookingId: String) = runAction { bookingRepository.markServiceCompleted(bookingId) }
     fun confirmCompletion(bookingId: String) = runAction { bookingRepository.confirmCompletion(bookingId) }
     fun cancelBooking(bookingId: String) = runAction { bookingRepository.cancelBooking(bookingId) }

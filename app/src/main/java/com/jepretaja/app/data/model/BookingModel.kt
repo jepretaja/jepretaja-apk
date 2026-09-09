@@ -24,6 +24,7 @@ object BookingStatus {
     const val CANCELLED = "cancelled"
     const val REFUND_REQUESTED = "refund_requested"
     const val DISPUTED = "disputed"
+    const val REJECTED = "rejected"
 }
 
 data class PriceBreakdown(

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jepretaja.app.core.util.FirestorePaths
 import com.jepretaja.app.core.util.MediaUnggahan
+import com.jepretaja.app.core.util.AppConstants
 import com.jepretaja.app.data.local.AppPreferences
 import com.jepretaja.app.data.local.DraftTersimpan
 import com.jepretaja.app.data.model.CreatorModel
@@ -99,7 +100,14 @@ class CreatorUploadViewModel @Inject constructor(
         // benar-benar menjalankan unggahannya — lihat MediaUnggahan untuk
         // uraian lengkapnya.
         val salinan = try {
-            uris.map { MediaUnggahan.salin(context, it, if (isVideo) "mp4" else "jpg") }
+            uris.map {
+                MediaUnggahan.salin(
+                    context,
+                    it,
+                    if (isVideo) "mp4" else "jpg",
+                    maxBytes = (if (isVideo) AppConstants.MAX_VIDEO_SIZE_MB else AppConstants.MAX_PHOTO_SIZE_MB) * 1024 * 1024,
+                )
+            }
         } catch (e: Exception) {
             _error.value = e.message?.takeIf { it.isNotBlank() }
                 ?: "Media gagal disiapkan. Coba pilih ulang dari galeri."

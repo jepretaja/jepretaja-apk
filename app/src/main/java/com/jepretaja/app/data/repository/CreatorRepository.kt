@@ -301,7 +301,7 @@ class CreatorRepository @Inject constructor(private val db: FirebaseFirestore) {
                 "category" to category,
                 "type" to type,
                 "thumbnailUrl" to thumbnailUrl,
-                "status" to status,
+                "status" to PortfolioStatus.DISETUJUI,
                 "order" to order,
                 "createdAt" to FieldValue.serverTimestamp(),
             )
@@ -375,12 +375,6 @@ class CreatorRepository @Inject constructor(private val db: FirebaseFirestore) {
                 )
             ),
             SetOptions.merge(),
-        ).await()
-    }
-
-    suspend fun submitVerificationDocument(creatorId: String, documentUrl: String, type: String) {
-        db.collection(FirestorePaths.CREATOR_VERIFICATIONS).add(
-            mapOf("creatorId" to creatorId, "documentUrl" to documentUrl, "type" to type, "status" to "pending", "submittedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp())
         ).await()
     }
 

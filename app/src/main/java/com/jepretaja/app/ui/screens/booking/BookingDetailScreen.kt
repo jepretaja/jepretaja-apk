@@ -230,6 +230,11 @@ fun BookingDetailScreen(
                             Spacer(Modifier.height(12.dp))
 
                             // --- Aksi Creator ---
+                            if (isCreator && b.status == BookingStatus.PAID) {
+                                ActionButton("Terima Booking", Icons.Default.CheckCircle, actionLoading) {
+                                    viewModel.confirmBooking(b.bookingId)
+                                }
+                            }
                             if (isCreator && (b.status == BookingStatus.CONFIRMED || b.status == BookingStatus.UPCOMING)) {
                                 ActionButton("Mulai Pengerjaan", Icons.Default.PlayCircleOutline, actionLoading) { viewModel.startService(b.bookingId) }
                             }

@@ -42,7 +42,12 @@ object MediaUnggahan {
      * Disalin per potongan 64 KB, tidak pernah dimuat penuh ke memori — video
      * ratusan megabita tetap aman di HP kelas bawah.
      */
-    suspend fun salin(context: Context, uri: Uri, extension: String): Uri = withContext(Dispatchers.IO) {
+    suspend fun salin(
+        context: Context,
+        uri: Uri,
+        extension: String,
+        maxBytes: Long? = null,
+    ): Uri = withContext(Dispatchers.IO) {
         // Berkas yang sudah milik kita sendiri tidak perlu disalin lagi. Ini
         // terjadi pada video yang baru dipotong VideoTools dan pada hasil
         // rekaman kamera dalam aplikasi.
@@ -52,7 +57,22 @@ object MediaUnggahan {
         val target = File(dir, "${UUID.randomUUID()}.$extension")
         try {
             context.contentResolver.openInputStream(uri)?.use { masuk ->
-                target.outputStream().use { keluar -> masuk.copyTo(keluar, 64 * 1024) }
+                target.outputStream().use { keluar ->
+                    val buffer = ByteArray(64 * 1024)
+                    var total = 0L
+                    var dibaca = masuk.read(buffer)
+                    while (dibaca >= 0) {
+                        if (dibaca > 0) {
+                            total += dibaca
+                            if (maxBytes != null && total > maxBytes) {
+                                val batasMb = maxBytes / (1024 * 1024)
+                                throw IOException("Ukuran berkas melebihi batas ${batasMb} MB. Pilih berkas yang lebih kecil.")
+                            }
+                            keluar.write(buffer, 0, dibaca)
+                        }
+                        dibaca = masuk.read(buffer)
+                    }
+                }
             } ?: throw IOException("Media tidak bisa dibaca. Pilih ulang dari galeri.")
         } catch (e: Exception) {
             // Salinan setengah jadi lebih berbahaya daripada tidak ada salinan:

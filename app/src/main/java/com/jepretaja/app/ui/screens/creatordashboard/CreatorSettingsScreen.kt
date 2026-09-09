@@ -1,14 +1,11 @@
 package com.jepretaja.app.ui.screens.creatordashboard
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,7 +16,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.data.repository.AuthRepository
 import com.jepretaja.app.data.repository.CreatorRepository
-import com.jepretaja.app.services.StorageService
 import com.jepretaja.app.ui.components.AppTopBar
 import com.jepretaja.app.ui.components.LocationField
 import com.jepretaja.app.ui.components.PremiumCard
@@ -32,11 +28,9 @@ import kotlinx.coroutines.launch
 class CreatorSettingsViewModel @javax.inject.Inject constructor(
     val creatorRepository: CreatorRepository,
     val authRepository: AuthRepository,
-    val storageService: StorageService,
 ) : androidx.lifecycle.ViewModel()
 
-/** Creator Settings (section 8 & 14) — edit profil + upload dokumen
- * verifikasi + logout. */
+/** Creator Settings — edit profil dan logout. */
 @Composable
 fun CreatorSettingsScreen(
     onBack: () -> Unit,
@@ -53,7 +47,6 @@ fun CreatorSettingsScreen(
     var city by remember { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
-    var uploadingDoc by remember { mutableStateOf(false) }
 
     // Saklar menerima booking. Dimuat dari dokumen creator supaya posisinya
     // benar setelah aplikasi dibuka ulang, bukan selalu kembali ke "menerima".
@@ -70,20 +63,6 @@ fun CreatorSettingsScreen(
                 catatanLibur = c.awayNote.orEmpty()
                 if (bio.isBlank()) bio = c.bio.orEmpty()
                 if (city.isBlank()) city = c.city.orEmpty()
-            }
-        }
-    }
-
-    val pickDoc = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null && uid != null) {
-            uploadingDoc = true
-            scope.launch {
-                runCatching {
-                    val url = viewModel.storageService.uploadVerificationDocument(uid, uri, "jpg")
-                    viewModel.creatorRepository.submitVerificationDocument(uid, url, "ktp")
-                }
-                uploadingDoc = false
-                message = "Dokumen terkirim, menunggu verifikasi Admin"
             }
         }
     }
@@ -194,21 +173,6 @@ fun CreatorSettingsScreen(
                     shape = RoundedCornerShape(percent = 50),
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                 ) { Text(if (saving) "Menyimpan..." else "Simpan Profil") }
-            }
-
-            Spacer(Modifier.height(28.dp))
-            SectionHeader("Verifikasi Akun", subtitle = "Upload KTP/dokumen identitas untuk mendapatkan badge terverifikasi.")
-            Spacer(Modifier.height(12.dp))
-            PremiumCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
-                OutlinedButton(
-                    onClick = { pickDoc.launch("image/*") },
-                    enabled = !uploadingDoc,
-                    shape = RoundedCornerShape(percent = 50),
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                ) {
-                    Icon(Icons.Default.UploadFile, contentDescription = null); Spacer(Modifier.width(8.dp))
-                    Text(if (uploadingDoc) "Mengunggah..." else "Upload Dokumen Verifikasi")
-                }
             }
 
             Spacer(Modifier.height(28.dp))

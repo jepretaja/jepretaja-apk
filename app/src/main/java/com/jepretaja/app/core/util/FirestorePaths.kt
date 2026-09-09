@@ -8,7 +8,6 @@ package com.jepretaja.app.core.util
 object FirestorePaths {
     const val USERS = "users"
     const val CREATORS = "creators"
-    const val CREATOR_VERIFICATIONS = "creator_verifications"
     const val EXPLORE_POSTS = "explore_posts"
     const val EXPLORE_COMMENTS = "explore_comments"
     const val EXPLORE_LIKES = "explore_likes"
@@ -44,6 +43,7 @@ object CloudFunctions {
     const val CREATE_BOOKING = "createBooking"
     const val PREVIEW_BOOKING_PRICE = "previewBookingPrice"
     const val START_SERVICE = "startService"
+    const val CONFIRM_BOOKING = "confirmBooking"
     const val MARK_SERVICE_COMPLETED = "markServiceCompleted"
     const val CONFIRM_BOOKING_COMPLETION = "confirmBookingCompletion"
     const val CANCEL_BOOKING = "cancelBooking"

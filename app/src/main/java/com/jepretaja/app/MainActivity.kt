@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
                     // berlaku di semua layar sekaligus, bukan ditambahkan satu
                     // per satu di tiap halaman.
                     OfflineBanner(isOnline = online, modifier = Modifier.statusBarsPadding())
-                    JepretAjaNavGraph()
+                    JepretAjaNavGraph(modifier = Modifier.weight(1f))
                 }
             }
         }

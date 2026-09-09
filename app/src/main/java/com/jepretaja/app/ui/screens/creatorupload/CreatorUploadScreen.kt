@@ -224,7 +224,7 @@ fun CreatorUploadScreen(
             }
 
             Box(
-                Modifier.fillMaxWidth().height(220.dp)
+                Modifier.fillMaxWidth().aspectRatio(16f / 9f)
                     .premiumShadow(6.dp, MaterialTheme.shapes.large)
                     .clip(MaterialTheme.shapes.large)
                     .background(AppColors.SurfaceVariant),
@@ -641,7 +641,7 @@ private fun AntreanSection(antrean: List<com.jepretaja.app.data.work.AntreanUngg
                         when (item.state) {
                             WorkInfo.State.ENQUEUED -> "Menunggu giliran / jaringan"
                             WorkInfo.State.RUNNING -> "Mengunggah ${(item.progress * 100).toInt()}%"
-                            WorkInfo.State.SUCCEEDED -> "Terkirim, menunggu moderasi"
+                            WorkInfo.State.SUCCEEDED -> "Tersimpan dan tayang"
                             WorkInfo.State.FAILED -> item.error ?: "Gagal"
                             WorkInfo.State.BLOCKED -> "Tertunda"
                             WorkInfo.State.CANCELLED -> "Dibatalkan"

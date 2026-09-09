@@ -121,6 +121,7 @@ fun CustomerRootShell(
             composable("tab_explore") {
                 ExploreScreen(
                     authViewModel = authViewModel,
+                    onSearch = { outerNavController.navigate(Routes.SEARCH) },
                     onCreatorClick = { id -> outerNavController.navigate(Routes.creatorProfile(id)) },
                     onCommentClick = { postId -> outerNavController.navigate(Routes.exploreDetail(postId)) },
                     onTagClick = { tag, isCategory ->
@@ -148,6 +149,7 @@ fun CustomerRootShell(
                     onHelp = { outerNavController.navigate(Routes.HELP) },
                     onChat = { bukaChat() },
                     onCreatorStudio = { outerNavController.navigate(Routes.CREATOR_DASHBOARD) },
+                    onCreateWork = { outerNavController.navigate(Routes.CREATOR_UPLOAD) },
                     // Ubin di grid profil membuka postnya, sama seperti profil TikTok.
                     onPostClick = { postId -> outerNavController.navigate(Routes.exploreDetail(postId)) },
                     onMyWorks = { outerNavController.navigate(Routes.MY_WORKS) },

@@ -100,14 +100,18 @@ class UploadWorker(
                     }
                 }
                 if (target == "Portfolio") {
-                    urls.forEach { url ->
-                        db.collection(FirestorePaths.PORTFOLIOS).add(
-                            mapOf(
-                                "creatorId" to creatorId, "mediaUrl" to url, "caption" to caption,
-                                "category" to category, "createdAt" to FieldValue.serverTimestamp(),
-                            )
-                        ).await()
-                    }
+                    db.collection(FirestorePaths.PORTFOLIOS).add(
+                        mapOf(
+                            "creatorId" to creatorId,
+                            "media" to urls,
+                            "title" to caption,
+                            "category" to category,
+                            "type" to "image",
+                            "thumbnailUrl" to urls.firstOrNull(),
+                            "status" to "active",
+                            "createdAt" to FieldValue.serverTimestamp(),
+                        )
+                    ).await()
                 } else {
                     db.collection(FirestorePaths.EXPLORE_POSTS).add(
                         dokumenPost(
@@ -135,7 +139,23 @@ class UploadWorker(
             // Gangguan jaringan diulang dengan backoff oleh WorkManager. Ini
             // justru inti dari memindahkan unggahan ke sini: sinyal yang putus
             // di lift tidak lagi berarti mengulang dari awal secara manual.
-            if (runAttemptCount < 3) Result.retry() else gagalkan(caption, category, target, uris, isVideo)
+            val detail = e.message?.takeIf { it.isNotBlank() }
+            val permanen = detail?.contains("HTTP 4") == true
+                || detail?.contains("Cloudinary belum dikonfigurasi") == true
+                || detail?.contains("tidak mengembalikan URL") == true
+                || detail?.contains("Ukuran berkas melebihi batas") == true
+            if (!permanen && runAttemptCount < 3) {
+                Result.retry()
+            } else {
+                gagalkan(
+                    caption,
+                    category,
+                    target,
+                    uris,
+                    isVideo,
+                    pesan = detail ?: "Upload gagal. Periksa koneksi dan konfigurasi penyimpanan.",
+                )
+            }
         } catch (e: Exception) {
             gagalkan(caption, category, target, uris, isVideo)
         }
@@ -207,7 +227,7 @@ class UploadWorker(
         "packageName" to packageName,
         "packagePrice" to packagePrice,
         "metrics" to mapOf("like" to 0, "comment" to 0, "save" to 0, "share" to 0, "view" to 0),
-        "status" to "pending_review",
+        "status" to "published",
         "createdAt" to FieldValue.serverTimestamp(),
     )
 

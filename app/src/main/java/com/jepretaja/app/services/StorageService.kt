@@ -237,13 +237,4 @@ class StorageService @Inject constructor(
         return secureUrlOf(json)
     }
 
-    /**
-     * Dokumen identitas creator. Preset Cloudinary untuk folder ini sebaiknya
-     * diatur ke mode "Authenticated" di dashboard supaya URL-nya tidak bisa
-     * ditebak dan dibuka publik.
-     */
-    suspend fun uploadVerificationDocument(creatorId: String, uri: Uri, extension: String): String {
-        val json = upload(uri, "verifications/$creatorId", "${UUID.randomUUID()}.$extension", "image", null)
-        return secureUrlOf(json)
-    }
 }
