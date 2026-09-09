@@ -122,6 +122,22 @@ fun CreatorCard(
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
+
+            if (creator.acceptingBookings) {
+                Row(
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .padding(10.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(AppColors.Success.copy(alpha = 0.92f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.size(6.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Color.White))
+                    Spacer(Modifier.width(5.dp))
+                    Text("Tersedia", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                }
+            }
         }
 
         Column(Modifier.align(Alignment.BottomStart).padding(12.dp)) {
@@ -141,6 +157,16 @@ fun CreatorCard(
                         tint = Color(0xFF64B5F6), modifier = Modifier.size(14.dp),
                     )
                 }
+            }
+            creator.categories.firstOrNull()?.takeIf { it.isNotBlank() }?.let { kategori ->
+                Spacer(Modifier.height(3.dp))
+                Text(
+                    kategori,
+                    color = Color.White.copy(alpha = 0.82f),
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             creator.city?.takeIf { it.isNotBlank() }?.let { kota ->
                 Spacer(Modifier.height(3.dp))

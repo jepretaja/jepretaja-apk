@@ -39,7 +39,7 @@ import com.jepretaja.app.ui.components.SkeletonBox
 import com.jepretaja.app.ui.components.SkeletonCreatorCard
 import com.jepretaja.app.ui.components.StatusBadge
 import com.jepretaja.app.ui.components.premiumShadow
-import com.jepretaja.app.ui.components.rememberPinnedAppTopBarScrollBehavior
+import com.jepretaja.app.ui.components.rememberAppTopBarScrollBehavior
 import com.jepretaja.app.ui.state.AuthViewModel
 
 /* --------------------------------------------------------------------------
@@ -116,10 +116,9 @@ fun HomeScreen(
         else -> "Tamu"
     }
 
-    // Header Home sengaja TIDAK ikut menyingkir saat digulir: isinya bukan
-    // sekadar judul, tapi juga pintasan Chat dan Notifikasi yang harus tetap
-    // terjangkau selama pengguna menelusuri halaman.
-    val scrollBehavior = rememberPinnedAppTopBarScrollBehavior()
+    // Header muncul saat kembali menggulir ke atas, lalu menghilang dengan
+    // animasi Material saat pengguna menelusuri konten ke bawah.
+    val scrollBehavior = rememberAppTopBarScrollBehavior()
 
     Scaffold(
         // nestedScroll tetap dipasang: dengan perilaku pinned, inilah yang
@@ -166,21 +165,16 @@ fun HomeScreen(
         Column(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()),
         ) {
-            // --- Sapaan ---
-            // Namanya sudah tampil di header, jadi baris ini tidak lagi
-            // mengulangnya — dua kali nama yang sama di satu layar terbaca
-            // seperti kelalaian, bukan sambutan. Judul besar Fraunces dipakai
-            // SEKALI di halaman ini; header memakai titleLarge supaya tidak
-            // ada dua tulisan yang sama-sama berebut jadi yang terbesar.
+            // --- Intro ---
             Text(
-                "Temukan fotografermu",
+                "Cerita yang layak diingat",
                 style = MaterialTheme.typography.displaySmall,
                 color = AppColors.TextPrimary,
                 modifier = Modifier.padding(horizontal = PadTepi),
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "Siapa yang mengabadikan momenmu berikutnya?",
+                "Temukan karya, creator, dan momen berikutnya.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppColors.TextSecondary,
                 modifier = Modifier.padding(horizontal = PadTepi),
@@ -210,60 +204,15 @@ fun HomeScreen(
 
             // --- Booking yang sedang berjalan ---
             activeBooking?.let { booking ->
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(18.dp))
                 ActiveBookingCard(booking = booking, onClick = { onBookingClick(booking.bookingId) })
             }
 
-            // --- 1. Creator Terdekat ---
+            // Karya ditempatkan lebih awal: Home ini adalah etalase visual,
+            // bukan dashboard dengan deretan menu.
             Seksi(
-                judul = "Creator Terdekat",
-                subjudul = "Ada di kotamu, gampang diajak ketemu",
-            ) {
-                BarisCreator(
-                    seksi = terdekat,
-                    kosongJudul = "Belum ada creator di sekitarmu",
-                    kosongKeterangan = "Coba lihat Creator Populer di bawah, banyak yang melayani luar kota.",
-                    onCreatorClick = onCreatorClick,
-                    onCobaLagi = viewModel::muatUlang,
-                )
-            }
-
-            // --- 2. Creator Populer ---
-            Seksi(
-                judul = "Creator Populer",
-                subjudul = "Rating tertinggi minggu ini",
-            ) {
-                BarisCreator(
-                    seksi = populer,
-                    kosongJudul = "Belum ada creator populer",
-                    kosongKeterangan = "Peringkat muncul setelah ada ulasan pertama masuk.",
-                    onCreatorClick = onCreatorClick,
-                    onCobaLagi = viewModel::muatUlang,
-                )
-            }
-
-            // --- 3. Rekomendasi ---
-            Seksi(
-                judul = "Rekomendasi",
-                subjudul = if (viewModel.punyaMinat) {
-                    "Dipilih dari kategori yang kamu minati"
-                } else {
-                    "Terverifikasi dan sedang menerima booking"
-                },
-            ) {
-                BarisCreator(
-                    seksi = rekomendasi,
-                    kosongJudul = "Belum ada rekomendasi",
-                    kosongKeterangan = "Rekomendasi menajam setelah kamu menelusuri beberapa creator.",
-                    onCreatorClick = onCreatorClick,
-                    onCobaLagi = viewModel::muatUlang,
-                )
-            }
-
-            // --- 4. Karya Terbaru ---
-            Seksi(
-                judul = "Karya Terbaru",
-                subjudul = "Baru diunggah creator",
+                judul = "Karya terbaru",
+                subjudul = "Lihat apa yang sedang dibuat creator",
                 labelAksi = "Lihat semua",
                 onAksi = onSeeExplore,
             ) {
@@ -275,7 +224,53 @@ fun HomeScreen(
                 )
             }
 
-            // --- 5. Kategori ---
+            // --- Creator yang direkomendasikan ---
+            Seksi(
+                judul = "Rekomendasi untukmu",
+                subjudul = if (viewModel.punyaMinat) {
+                    "Dipilih dari kategori yang kamu minati"
+                } else {
+                    "Creator terverifikasi dan siap menerima booking"
+                },
+            ) {
+                BarisCreator(
+                    seksi = rekomendasi,
+                    kosongJudul = "Belum ada rekomendasi",
+                    kosongKeterangan = "Rekomendasi akan muncul setelah creator tersedia.",
+                    onCreatorClick = onCreatorClick,
+                    onCobaLagi = viewModel::muatUlang,
+                )
+            }
+
+            // --- Creator terdekat ---
+            Seksi(
+                judul = "Creator di sekitarmu",
+                subjudul = "Mudah ditemukan, mudah diajak bekerja sama",
+            ) {
+                BarisCreator(
+                    seksi = terdekat,
+                    kosongJudul = "Belum ada creator di sekitar",
+                    kosongKeterangan = "Coba lihat creator pilihan lainnya.",
+                    onCreatorClick = onCreatorClick,
+                    onCobaLagi = viewModel::muatUlang,
+                )
+            }
+
+            // --- Creator populer ---
+            Seksi(
+                judul = "Creator populer",
+                subjudul = "Rating terbaik dari komunitas JepretAja",
+            ) {
+                BarisCreator(
+                    seksi = populer,
+                    kosongJudul = "Belum ada creator populer",
+                    kosongKeterangan = "Peringkat muncul setelah ada ulasan pertama masuk.",
+                    onCreatorClick = onCreatorClick,
+                    onCobaLagi = viewModel::muatUlang,
+                )
+            }
+
+            // --- Kategori ---
             Seksi(
                 judul = "Kategori",
                 subjudul = "Telusuri berdasarkan jenis layanan",
@@ -465,7 +460,7 @@ private fun BarisKarya(
                 contentPadding = PaddingValues(horizontal = PadTepi),
                 horizontalArrangement = Arrangement.spacedBy(JarakItem),
             ) {
-                items(seksi.data) { post ->
+                items(seksi.data, key = { it.postId }) { post ->
                     UbinKarya(post = post, onClick = { onPostClick(post.postId) })
                 }
             }
@@ -473,13 +468,13 @@ private fun BarisKarya(
     }
 }
 
-/** Satu ubin karya — ukuran & sudutnya sama persis dengan kartu creator. */
+/** Kartu karya visual dengan konteks creator dan engagement yang langsung terbaca. */
 @Composable
 private fun UbinKarya(post: ExplorePostModel, onClick: () -> Unit) {
     Box(
         Modifier
-            .width(LebarKartu)
-            .height(TinggiKartu)
+            .width(220.dp)
+            .height(292.dp)
             .premiumShadow(8.dp, SudutKartu)
             .clip(SudutKartu)
             .background(AppColors.SurfaceVariant)
@@ -505,14 +500,31 @@ private fun UbinKarya(post: ExplorePostModel, onClick: () -> Unit) {
                     .padding(4.dp).size(16.dp),
             )
         }
-        Text(
-            "@${post.creatorName}",
-            color = Color.White,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
-        )
+        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "@${post.creatorName.ifBlank { "creator" }}",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                if (post.creatorVerified) {
+                    Icon(Icons.Default.Verified, contentDescription = "Terverifikasi", tint = AppColors.Info, modifier = Modifier.size(15.dp))
+                }
+            }
+            post.caption.takeIf { it.isNotBlank() }?.let {
+                Text(it, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.FavoriteBorder, contentDescription = "Suka", tint = Color.White, modifier = Modifier.size(16.dp))
+                Text(post.likeCount.toString(), color = Color.White, style = MaterialTheme.typography.labelSmall)
+                Icon(Icons.Default.ChatBubbleOutline, contentDescription = "Komentar", tint = Color.White, modifier = Modifier.size(16.dp))
+                Text(post.commentCount.toString(), color = Color.White, style = MaterialTheme.typography.labelSmall)
+            }
+        }
     }
 }
 
