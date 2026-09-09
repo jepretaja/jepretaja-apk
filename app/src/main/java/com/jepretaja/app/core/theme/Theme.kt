@@ -48,11 +48,11 @@ private fun schemeFrom(c: JepretAjaColors) = if (c.isLight) {
  * standar (Card, TextField, Sheet, Dialog, Chip) otomatis memakai skala ini
  * begitu di-set di MaterialTheme, tanpa perlu menyentuh tiap layar. */
 private val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(14.dp),
-    large = RoundedCornerShape(20.dp),
-    extraLarge = RoundedCornerShape(28.dp),
+    extraSmall = RoundedCornerShape(AppRadii.small),
+    small = RoundedCornerShape(AppRadii.small),
+    medium = RoundedCornerShape(AppRadii.medium),
+    large = RoundedCornerShape(AppRadii.large),
+    extraLarge = RoundedCornerShape(24.dp),
 )
 
 /**

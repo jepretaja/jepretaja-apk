@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.jepretaja.app.core.theme.AppColors
+import com.jepretaja.app.core.theme.AppElevation
 import com.jepretaja.app.core.theme.AppSpacing
 import com.jepretaja.app.core.theme.AppRadii
 
@@ -54,7 +55,7 @@ fun Modifier.premiumShadow(elevation: androidx.compose.ui.unit.Dp, shape: Shape)
 fun PremiumCard(
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.large,
-    elevation: androidx.compose.ui.unit.Dp = 6.dp,
+    elevation: androidx.compose.ui.unit.Dp = AppElevation.card,
     color: Color = AppColors.Surface,
     onClick: (() -> Unit)? = null,
     contentPadding: androidx.compose.foundation.layout.PaddingValues = PaddingValues(AppSpacing.lg),
@@ -196,7 +197,7 @@ fun InfoRow(
     }
 }
 
-/** Tombol CTA penuh-lebar, pill, dipakai untuk aksi utama tiap layar. */
+/** Tombol CTA penuh-lebar dengan ukuran dan radius yang sama di seluruh APK. */
 @Composable
 fun BigPrimaryButton(
     text: String,
@@ -208,9 +209,9 @@ fun BigPrimaryButton(
     Button(
         onClick = onClick,
         enabled = enabled && !loading,
-        shape = RoundedCornerShape(AppRadii.pill),
+        shape = RoundedCornerShape(AppRadii.medium),
         colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary, contentColor = AppColors.OnPrimary),
-        modifier = modifier.fillMaxWidth().height(54.dp),
+        modifier = modifier.fillMaxWidth().height(52.dp),
     ) {
         if (loading) {
             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = AppColors.OnPrimary, strokeWidth = 2.dp)
@@ -267,7 +268,7 @@ fun AppButton(
             onClick = onClick,
             enabled = enabled && !loading,
             colors = colors,
-            shape = RoundedCornerShape(AppRadii.pill),
+            shape = RoundedCornerShape(AppRadii.medium),
             modifier = modifier.height(48.dp),
             content = content,
         )
@@ -276,7 +277,7 @@ fun AppButton(
             onClick = onClick,
             enabled = enabled && !loading,
             colors = colors,
-            shape = RoundedCornerShape(AppRadii.pill),
+            shape = RoundedCornerShape(AppRadii.medium),
             modifier = modifier.height(48.dp),
             content = content,
         )

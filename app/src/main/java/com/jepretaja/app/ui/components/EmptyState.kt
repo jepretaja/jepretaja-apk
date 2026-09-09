@@ -60,13 +60,7 @@ fun EmptyState(
         }
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(20.dp))
-            Button(
-                onClick = onAction,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Primary,
-                    contentColor = AppColors.OnPrimary,
-                ),
-            ) { Text(actionLabel) }
+            AppButton(text = actionLabel, onClick = onAction, modifier = Modifier.fillMaxWidth(0.72f))
         }
     }
 }

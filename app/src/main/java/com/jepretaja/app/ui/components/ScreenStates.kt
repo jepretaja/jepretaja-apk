@@ -8,8 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.WifiOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,13 +36,7 @@ fun ErrorState(
         Icon(icon, contentDescription = null, tint = AppColors.Danger)
         Text(title, style = MaterialTheme.typography.titleMedium, color = AppColors.TextPrimary, textAlign = TextAlign.Center)
         description?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary, textAlign = TextAlign.Center) }
-        Button(
-            onClick = onRetry,
-            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary, contentColor = AppColors.OnPrimary),
-        ) {
-            Icon(Icons.Default.Refresh, contentDescription = null)
-            Text("Coba Lagi", modifier = Modifier.padding(start = 8.dp))
-        }
+        AppButton(text = "Coba Lagi", onClick = onRetry, modifier = Modifier.fillMaxWidth(0.72f))
     }
 }
 

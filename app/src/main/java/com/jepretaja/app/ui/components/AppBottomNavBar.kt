@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.jepretaja.app.core.theme.AppColors
+import com.jepretaja.app.core.theme.AppRadii
+import com.jepretaja.app.core.theme.AppSpacing
 
 data class NavTab(val route: String, val label: String, val icon: ImageVector, val iconOutline: ImageVector)
 
@@ -50,15 +52,15 @@ fun AppBottomNavBar(
         Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .shadow(elevation = 16.dp, shape = RoundedCornerShape(28.dp), ambientColor = Color.Black.copy(alpha = 0.12f), spotColor = Color.Black.copy(alpha = 0.18f))
-                .clip(RoundedCornerShape(28.dp))
+                .shadow(elevation = 16.dp, shape = RoundedCornerShape(AppRadii.large), ambientColor = Color.Black.copy(alpha = 0.12f), spotColor = Color.Black.copy(alpha = 0.18f))
+                .clip(RoundedCornerShape(AppRadii.large))
                 .background(AppColors.Surface)
-                .padding(vertical = 10.dp),
+                .padding(vertical = AppSpacing.sm),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -99,7 +101,7 @@ private fun NavItem(tab: NavTab, selected: Boolean, onClick: () -> Unit, modifie
             )
             .padding(horizontal = 4.dp),
     ) {
-        Box(Modifier.clip(RoundedCornerShape(14.dp)).background(indicatorColor).padding(horizontal = 14.dp, vertical = 6.dp)) {
+        Box(Modifier.clip(RoundedCornerShape(AppRadii.medium)).background(indicatorColor).padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm)) {
             Icon(if (selected) tab.icon else tab.iconOutline, contentDescription = tab.label, tint = contentColor, modifier = Modifier.size(22.dp))
         }
         Spacer(Modifier.height(3.dp))
