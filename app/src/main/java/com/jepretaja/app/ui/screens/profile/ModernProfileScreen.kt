@@ -13,15 +13,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.PersonAddAlt
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.RateReview
+import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -57,10 +63,19 @@ private enum class ProfileCollection(val label: String) {
 fun ModernProfileScreen(
     onLogin: () -> Unit,
     onMyBookings: () -> Unit,
+    onFavorites: () -> Unit,
+    onMyReviews: () -> Unit,
+    onReports: () -> Unit,
     onNotifications: () -> Unit,
     onHelp: () -> Unit,
+    onChat: () -> Unit,
+    onCreatorStudio: () -> Unit,
     onInterests: () -> Unit,
     onWatchHistory: () -> Unit,
+    onFollowList: (Int) -> Unit,
+    onMyWorks: () -> Unit,
+    onSaved: () -> Unit,
+    onLoggedOut: () -> Unit,
     onEditProfile: () -> Unit,
     onPostClick: (String) -> Unit,
     onCreateWork: () -> Unit,
@@ -182,10 +197,34 @@ fun ModernProfileScreen(
                 Column(Modifier.padding(horizontal = AppSpacing.xl).padding(bottom = AppSpacing.xxxl)) {
                     Text("Pengaturan", style = MaterialTheme.typography.headlineSmall, color = AppColors.TextPrimary)
                     Spacer(Modifier.height(AppSpacing.md))
+                    Text("Aktivitas", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
+                    SettingsAction(Icons.Default.CalendarMonth, "Booking saya", onMyBookings)
+                    SettingsAction(Icons.AutoMirrored.Filled.Chat, "Chat", onChat)
                     SettingsAction(Icons.Default.NotificationsNone, "Notifikasi", onNotifications)
+                    SettingsAction(Icons.Default.RateReview, "Review saya", onMyReviews)
+                    SettingsAction(Icons.Default.ReportProblem, "Laporan saya", onReports)
+                    Spacer(Modifier.height(AppSpacing.md))
+                    Text("Koleksi & sosial", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
+                    SettingsAction(Icons.Default.Favorite, "Favorit creator", onFavorites)
+                    SettingsAction(Icons.Default.BookmarkBorder, "Karya tersimpan", onSaved)
+                    SettingsAction(Icons.Default.GridView, "Karya saya", onMyWorks)
+                    SettingsAction(Icons.Default.PersonAddAlt, "Mengikuti", { onFollowList(0) })
+                    SettingsAction(Icons.Default.People, "Pengikut", { onFollowList(1) })
+                    Spacer(Modifier.height(AppSpacing.md))
+                    Text("Preferensi", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
                     SettingsAction(Icons.Default.PersonAddAlt, "Minat dan preferensi", onInterests)
                     SettingsAction(Icons.Default.HelpOutline, "Bantuan", onHelp)
                     SettingsAction(Icons.Default.History, "Riwayat tontonan", onWatchHistory)
+                    if (authState.isCreator) {
+                        Spacer(Modifier.height(AppSpacing.md))
+                        Text("Creator", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
+                        SettingsAction(Icons.Default.CameraAlt, "Creator Studio", onCreatorStudio)
+                        SettingsAction(Icons.Default.GridView, "Kelola karya", onMyWorks)
+                    }
+                    Spacer(Modifier.height(AppSpacing.md))
+                    TextButton(onClick = onLoggedOut, modifier = Modifier.fillMaxWidth()) {
+                        Text("Keluar dari akun", color = AppColors.Danger)
+                    }
                 }
             }
         }
