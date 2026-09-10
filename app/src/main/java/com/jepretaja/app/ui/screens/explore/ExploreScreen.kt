@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.core.util.AppConstants
 import com.jepretaja.app.ui.screens.chat.SendToChatSheet
+import com.jepretaja.app.ui.screens.explore.ExploreCommentsSheet
 import com.jepretaja.app.ui.state.AuthViewModel
 import kotlinx.coroutines.flow.flowOf
 
@@ -44,7 +45,6 @@ import kotlinx.coroutines.flow.flowOf
 fun ExploreScreen(
     authViewModel: AuthViewModel,
     onCreatorClick: (String) -> Unit,
-    onCommentClick: (String) -> Unit,
     onSearch: () -> Unit = {},
     onPackageClick: (String) -> Unit = {},
     /** [isCategory] true untuk kategori resmi, false untuk tagar bebas. */
@@ -60,6 +60,7 @@ fun ExploreScreen(
     val context = LocalContext.current
     var editingPost by remember { mutableStateOf<com.jepretaja.app.data.model.ExplorePostModel?>(null) }
     var sharingPost by remember { mutableStateOf<com.jepretaja.app.data.model.ExplorePostModel?>(null) }
+    var commentsPostId by remember { mutableStateOf<String?>(null) }
     val habis by viewModel.habis.collectAsState()
     val kecepatan by viewModel.kecepatan.collectAsState()
     val saranCreator by viewModel.saranCreator.collectAsState()
@@ -283,7 +284,7 @@ fun ExploreScreen(
                         viewModel.incrementShare(post.postId)
                     },
                     onCreatorClick = { onCreatorClick(post.creatorId) },
-                    onCommentClick = { onCommentClick(post.postId) },
+                    onCommentClick = { commentsPostId = post.postId },
                     onDeletePost = { myUid?.let { viewModel.deletePost(post.postId, it) } },
                     onEditPost = { editingPost = post },
                     onPackageClick = onPackageClick,
@@ -400,5 +401,13 @@ fun ExploreScreen(
                 onDismiss = { sharingPost = null },
             )
         }
+    }
+
+    commentsPostId?.let { postId ->
+        ExploreCommentsSheet(
+            postId = postId,
+            authViewModel = authViewModel,
+            onDismiss = { commentsPostId = null },
+        )
     }
 }

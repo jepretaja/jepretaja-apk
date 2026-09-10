@@ -88,7 +88,7 @@ fun SkeletonList(count: Int = 6, modifier: Modifier = Modifier) {
 @Composable
 fun SkeletonCreatorCard(modifier: Modifier = Modifier.width(168.dp)) {
     SkeletonBox(
-        modifier.aspectRatio(0.75f),
+        modifier.aspectRatio(16f / 9f),
         androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
     )
 }
@@ -102,7 +102,7 @@ fun SkeletonCreatorCard(modifier: Modifier = Modifier.width(168.dp)) {
  */
 @Composable
 fun SkeletonPostTile(modifier: Modifier = Modifier) {
-    SkeletonBox(modifier.aspectRatio(0.75f), androidx.compose.ui.graphics.RectangleShape)
+    SkeletonBox(modifier.aspectRatio(16f / 9f), androidx.compose.ui.graphics.RectangleShape)
 }
 
 @Composable

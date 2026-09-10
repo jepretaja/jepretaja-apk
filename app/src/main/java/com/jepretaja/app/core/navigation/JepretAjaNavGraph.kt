@@ -28,6 +28,7 @@ import com.jepretaja.app.ui.screens.chat.ChatListScreen
 import com.jepretaja.app.ui.screens.chat.ChatRoomScreen
 import com.jepretaja.app.ui.screens.creator.CreatorProfileScreen
 import com.jepretaja.app.ui.screens.profile.EditProfileScreen
+import com.jepretaja.app.ui.screens.profile.SettingsScreen
 import com.jepretaja.app.ui.screens.reviews.WriteReviewScreen
 import com.jepretaja.app.ui.screens.profile.SavedPostsScreen
 import com.jepretaja.app.ui.screens.creatordashboard.CreatorAvailabilityScreen
@@ -379,7 +380,11 @@ fun JepretAjaNavGraph(
         }
 
         composable(Routes.NOTIFICATIONS) {
-            NotificationsScreen(onBack = { navController.popBackStack() }, authViewModel = authViewModel)
+            NotificationsScreen(
+                onBack = { navController.popBackStack() },
+                authViewModel = authViewModel,
+                onUploadClick = { navController.navigate(Routes.CREATOR_UPLOAD) },
+            )
         }
         composable(Routes.FAVORITES) {
             FavoritesScreen(
@@ -424,6 +429,19 @@ fun JepretAjaNavGraph(
         }
         composable(Routes.EDIT_PROFILE) {
             EditProfileScreen(onBack = { navController.popBackStack() }, authViewModel = authViewModel)
+        }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onEditProfile = { navController.navigate(Routes.EDIT_PROFILE) },
+                onMyBookings = { navController.navigate(Routes.MY_BOOKINGS) },
+                onNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
+                onFavorites = { navController.navigate(Routes.FAVORITES) },
+                onHelp = { navController.navigate(Routes.HELP) },
+                onCreatorBank = { navController.navigate(Routes.CREATOR_BANK_ACCOUNT) },
+                onLoggedOut = { navController.navigate(Routes.CHOOSE_ACCESS) { popUpTo(0) } },
+                authViewModel = authViewModel,
+            )
         }
         composable(
             Routes.FOLLOW_LIST,

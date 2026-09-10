@@ -108,7 +108,7 @@ private fun UbinPortofolio(item: PortfolioModel, onClick: () -> Unit) {
     val thumb = item.media.firstOrNull()
     Box(
         Modifier
-            .aspectRatio(0.75f)
+            .aspectRatio(16f / 9f)
             .background(AppColors.SurfaceVariant)
             .clickable(onClick = onClick),
     ) {
@@ -247,7 +247,7 @@ private fun UbinExplore(post: ExplorePostModel, disematkan: Boolean, onClick: ()
     val thumb = post.thumbnailUrl ?: post.mediaUrls.firstOrNull()
     Box(
         Modifier
-            .aspectRatio(0.75f)
+            .aspectRatio(16f / 9f)
             .background(AppColors.SurfaceVariant)
             .clickable(onClick = onClick),
     ) {
@@ -411,6 +411,6 @@ private fun BarisRinci(ikon: ImageVector, teks: String) {
 /** Kerangka ubin, bentuknya sama persis dengan ubin aslinya. */
 private fun LazyGridScope.kerangkaUbin(jumlah: Int) {
     items(jumlah) {
-        SkeletonBox(Modifier.fillMaxWidth().aspectRatio(0.75f), RoundedCornerShape(0.dp))
+        SkeletonBox(Modifier.fillMaxWidth().aspectRatio(16f / 9f), RoundedCornerShape(0.dp))
     }
 }

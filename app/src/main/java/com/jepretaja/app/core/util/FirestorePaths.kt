@@ -60,9 +60,7 @@ object AppConstants {
     val SERVICE_CATEGORIES = listOf(
         "Wedding", "Prewedding", "Event", "Wisuda", "Couple", "Family", "Product", "Commercial", "Video",
     )
-    val EXPLORE_TABS = listOf(
-        "For You", "Following", "Wedding", "Prewedding", "Event", "Wisuda", "Couple", "Family", "Product", "Commercial", "Video", "Nearby",
-    )
+    val EXPLORE_TABS = listOf("Following", "For You", "Nearby")
     const val MIN_WITHDRAWAL_DEFAULT = 100_000L
 
     /**

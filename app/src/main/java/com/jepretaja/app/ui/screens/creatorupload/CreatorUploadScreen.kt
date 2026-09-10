@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
@@ -20,6 +22,10 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,15 +45,16 @@ import com.jepretaja.app.core.util.MediaTerpilih
 import com.jepretaja.app.core.util.VideoTools
 import com.jepretaja.app.data.work.UploadQueue
 import com.jepretaja.app.ui.components.AppAvatar
-import com.jepretaja.app.ui.components.BigPrimaryButton
 import com.jepretaja.app.ui.components.EmptyState
 import com.jepretaja.app.ui.components.GradientHeroCard
 import com.jepretaja.app.ui.components.SectionHeader
 import com.jepretaja.app.ui.components.VideoPlayer
 import com.jepretaja.app.ui.components.premiumShadow
+import com.jepretaja.app.ui.components.rememberAppTopBarScrollBehavior
 import com.jepretaja.app.ui.screens.camera.CameraCaptureScreen
 import com.jepretaja.app.ui.state.AuthViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -77,6 +84,7 @@ fun CreatorUploadScreen(
     val drafts by viewModel.drafts.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     var mediaUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isVideo by remember { mutableStateOf(false) }
@@ -89,6 +97,10 @@ fun CreatorUploadScreen(
     var lokasi by remember { mutableStateOf("") }
     var kebijakanKomentar by remember { mutableStateOf("all") }
     var bolehSimpan by remember { mutableStateOf(true) }
+    var bolehLike by remember { mutableStateOf(true) }
+    var bolehDownload by remember { mutableStateOf(false) }
+    var tampilkanJumlahLike by remember { mutableStateOf(true) }
+    var visibilitas by remember { mutableStateOf("public") }
     var infoMedia by remember { mutableStateOf(MediaTerpilih()) }
     var alasanTolak by remember { mutableStateOf<String?>(null) }
     var draftAktif by remember { mutableStateOf<String?>(null) }
@@ -109,6 +121,7 @@ fun CreatorUploadScreen(
     var sampulPosisiMs by remember { mutableStateOf(0f) }
     var sampulPratinjau by remember { mutableStateOf<Uri?>(null) }
     var sedangMenyiapkan by remember { mutableStateOf(false) }
+    var draftOtomatisId by remember { mutableStateOf<String?>(null) }
 
     val antrean by remember { UploadQueue.stream(context) }.collectAsState(initial = emptyList())
 
@@ -180,6 +193,29 @@ fun CreatorUploadScreen(
         }
     }
 
+    LaunchedEffect(mediaUris, isVideo, caption, category, target, lokasi, kebijakanKomentar, bolehSimpan, bolehLike, bolehDownload, tampilkanJumlahLike, visibilitas, paketDipilih?.packageId) {
+        if (mediaUris.isNotEmpty() || caption.isNotBlank()) {
+            delay(900)
+            viewModel.simpanDraft(
+                draftOtomatisId, caption, category, target, mediaUris, isVideo,
+                PengaturanPost(
+                    location = lokasi.trim().takeIf { it.isNotBlank() },
+                    commentPolicy = kebijakanKomentar,
+                    allowSave = bolehSimpan,
+                    allowLike = bolehLike,
+                    allowDownload = bolehDownload,
+                    showLikeCount = tampilkanJumlahLike,
+                    visibility = visibilitas,
+                    packageId = paketDipilih?.packageId,
+                    packageName = paketDipilih?.name,
+                    packagePrice = paketDipilih?.price,
+                ),
+                sampulPratinjau,
+            )
+            if (draftOtomatisId == null) draftOtomatisId = viewModel.drafts.value.firstOrNull()?.id
+        }
+    }
+
     if (bukaKamera) {
         CameraCaptureScreen(
             onCaptured = { uri, video ->
@@ -193,16 +229,59 @@ fun CreatorUploadScreen(
         return
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }, topBar = {
+    val scrollBehavior = rememberAppTopBarScrollBehavior()
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(snackbarHostState) }, topBar = {
         com.jepretaja.app.ui.components.AppTopBar(
-            title = "Upload Konten",
+            title = "Buat Postingan",
             onBack = onBack,
+            scrollBehavior = scrollBehavior,
             actions = {
                 TextButton(onClick = { viewModel.refreshDrafts(); bukaDraft = true }) {
                     Text(if (drafts.isEmpty()) "Draft" else "Draft (${drafts.size})")
                 }
             },
         )
+    }, bottomBar = {
+        if (authState.isCreator) {
+            Row(
+                Modifier.fillMaxWidth().imePadding().navigationBarsPadding()
+                    .background(AppColors.Surface).padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        viewModel.simpanDraft(
+                            draftAktif, caption, category, target, mediaUris, isVideo,
+                            PengaturanPost(
+                                location = lokasi.trim().takeIf { it.isNotBlank() },
+                                commentPolicy = kebijakanKomentar,
+                                allowSave = bolehSimpan,
+                                allowLike = bolehLike,
+                                allowDownload = bolehDownload,
+                                showLikeCount = tampilkanJumlahLike,
+                                visibility = visibilitas,
+                                packageId = paketDipilih?.packageId,
+                                packageName = paketDipilih?.name,
+                                packagePrice = paketDipilih?.price,
+                            ),
+                            sampulPratinjau,
+                        )
+                        onBack()
+                    },
+                    enabled = caption.isNotBlank() || mediaUris.isNotEmpty(),
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    shape = RoundedCornerShape(percent = 50),
+                ) { Text("Simpan Draft") }
+                Button(
+                    onClick = { sedangMenyiapkan = true },
+                    enabled = mediaUris.isNotEmpty() && alasanTolak == null && !sedangMenyiapkan,
+                    modifier = Modifier.weight(1.2f).height(50.dp),
+                    shape = RoundedCornerShape(percent = 50),
+                ) { Text(if (jadwalMillis != null) "Jadwalkan" else "Publikasikan") }
+            }
+        }
     }) { padding ->
         // Hanya creator yang boleh mengunggah. Penjagaan ditaruh di layarnya
         // sendiri supaya jalur masuk lain (deep link, back stack) tidak lolos.
@@ -263,7 +342,11 @@ fun CreatorUploadScreen(
             }
 
             if (antrean.isNotEmpty()) {
-                AntreanSection(antrean, onBatal = { UploadQueue.batal(context, it) })
+                AntreanSection(
+                    antrean,
+                    onBatal = { UploadQueue.batal(context, it) },
+                    onRetry = { id -> scope.launch { UploadQueue.retry(context, id) } },
+                )
                 Spacer(Modifier.height(18.dp))
             }
 
@@ -531,6 +614,21 @@ fun CreatorUploadScreen(
                 Switch(checked = bolehSimpan, onCheckedChange = { bolehSimpan = it })
             }
 
+            StudioToggle("Izinkan like", "Pengguna dapat menyukai postingan", bolehLike) { bolehLike = it }
+            StudioToggle("Izinkan download", "Pengguna dapat mengunduh media", bolehDownload) { bolehDownload = it }
+            StudioToggle("Tampilkan jumlah like", "Sembunyikan angka untuk fokus pada karya", tampilkanJumlahLike) { tampilkanJumlahLike = it }
+            Spacer(Modifier.height(10.dp))
+            Text("Siapa yang dapat melihat?", style = MaterialTheme.typography.bodyMedium, color = AppColors.TextPrimary)
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                listOf("public" to "Publik", "followers" to "Pengikut", "private" to "Pribadi").forEachIndexed { i, (value, label) ->
+                    SegmentedButton(
+                        selected = visibilitas == value,
+                        onClick = { visibilitas = value },
+                        shape = SegmentedButtonDefaults.itemShape(index = i, count = 3),
+                    ) { Text(label) }
+                }
+            }
+
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -547,16 +645,16 @@ fun CreatorUploadScreen(
                 )
             }
 
-            Spacer(Modifier.height(28.dp))
-            BigPrimaryButton(
-                text = when {
-                    sedangMenyiapkan -> "Menyiapkan video..."
-                    jadwalMillis != null -> "Jadwalkan"
-                    else -> "Upload"
-                },
-                loading = sedangMenyiapkan,
-                enabled = mediaUris.isNotEmpty() && alasanTolak == null && !sedangMenyiapkan,
-                onClick = { sedangMenyiapkan = true },
+            Spacer(Modifier.height(22.dp))
+            SectionHeader("Preview", subtitle = "Tampilan postingan seperti yang dilihat pengguna")
+            Spacer(Modifier.height(10.dp))
+            PreviewPost(
+                uri = mediaUris.firstOrNull(),
+                isVideo = isVideo,
+                caption = caption,
+                creatorName = authState.profile?.name ?: "Creator JepretAja",
+                location = lokasi,
+                packageName = paketDipilih?.name,
             )
 
             // Pemotongan video dijalankan di sini, terpisah dari onClick, karena
@@ -597,6 +695,10 @@ fun CreatorUploadScreen(
                             location = lokasi.trim().takeIf { it.isNotBlank() },
                             commentPolicy = kebijakanKomentar,
                             allowSave = bolehSimpan,
+                            allowLike = bolehLike,
+                            allowDownload = bolehDownload,
+                            showLikeCount = tampilkanJumlahLike,
+                            visibility = visibilitas,
                             durationSeconds = durasiAkhir,
                             scheduledAt = jadwalMillis,
                             packageId = paketDipilih?.packageId,
@@ -609,15 +711,6 @@ fun CreatorUploadScreen(
                 }
             }
 
-            Spacer(Modifier.height(10.dp))
-            TextButton(
-                onClick = {
-                    viewModel.simpanDraft(draftAktif, caption, category, target, mediaUris, isVideo)
-                    onBack()
-                },
-                enabled = caption.isNotBlank() || mediaUris.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth(),
-            ) { Text("Simpan sebagai draft") }
             Spacer(Modifier.height(20.dp))
         }
 
@@ -662,6 +755,16 @@ fun CreatorUploadScreen(
                                 isVideo = d.isVideo
                                 mediaUris = d.mediaUris.mapNotNull { runCatching { Uri.parse(it) }.getOrNull() }
                                 draftAktif = d.id
+                                draftOtomatisId = d.id
+                                lokasi = d.location.orEmpty()
+                                kebijakanKomentar = d.commentPolicy
+                                bolehSimpan = d.allowSave
+                                bolehLike = d.allowLike
+                                bolehDownload = d.allowDownload
+                                tampilkanJumlahLike = d.showLikeCount
+                                visibilitas = d.visibility
+                                paketDipilih = paketSaya.firstOrNull { it.packageId == d.packageId }
+                                sampulPratinjau = d.coverUri?.let { Uri.parse(it) }
                                 bukaDraft = false
                             },
                         )
@@ -682,7 +785,11 @@ fun CreatorUploadScreen(
 
 /** Antrean unggahan yang sedang berjalan, menunggu jaringan, atau gagal. */
 @Composable
-private fun AntreanSection(antrean: List<com.jepretaja.app.data.work.AntreanUnggah>, onBatal: (java.util.UUID) -> Unit) {
+private fun AntreanSection(
+    antrean: List<com.jepretaja.app.data.work.AntreanUnggah>,
+    onBatal: (java.util.UUID) -> Unit,
+    onRetry: (java.util.UUID) -> Unit,
+) {
     Column(Modifier.fillMaxWidth()) {
         Text("Antrean unggah", style = MaterialTheme.typography.titleSmall, color = AppColors.TextPrimary)
         Spacer(Modifier.height(8.dp))
@@ -713,6 +820,9 @@ private fun AntreanSection(antrean: List<com.jepretaja.app.data.work.AntreanUngg
                 }
                 if (item.state == WorkInfo.State.ENQUEUED || item.state == WorkInfo.State.RUNNING) {
                     TextButton(onClick = { onBatal(item.id) }) { Text("Batal") }
+                }
+                if (item.state == WorkInfo.State.FAILED || item.state == WorkInfo.State.CANCELLED) {
+                    TextButton(onClick = { onRetry(item.id) }) { Text("Coba Lagi") }
                 }
             }
         }
@@ -781,3 +891,56 @@ private fun detik(ms: Float): String {
 
 private fun formatWaktu(millis: Long): String =
     SimpleDateFormat("d MMM, HH:mm", Locale("in", "ID")).format(Date(millis))
+
+@Composable
+private fun StudioToggle(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextPrimary)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@Composable
+private fun PreviewPost(
+    uri: Uri?,
+    isVideo: Boolean,
+    caption: String,
+    creatorName: String,
+    location: String,
+    packageName: String?,
+) {
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color.Black),
+    ) {
+        Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f), contentAlignment = Alignment.Center) {
+            if (uri == null) {
+                Text("Pilih foto atau video untuk melihat preview", color = Color.White.copy(alpha = 0.72f))
+            } else if (isVideo) {
+                VideoPlayer(url = uri.toString(), playWhenActive = false, muted = true, modifier = Modifier.fillMaxSize())
+            } else {
+                AsyncImage(model = uri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            }
+        }
+        Column(Modifier.padding(14.dp)) {
+            Text(creatorName, color = Color.White, style = MaterialTheme.typography.titleSmall)
+            if (caption.isNotBlank()) Text(caption, color = Color.White.copy(alpha = 0.86f), maxLines = 3, style = MaterialTheme.typography.bodySmall)
+            if (location.isNotBlank()) Text("Lokasi: $location", color = Color.White.copy(alpha = 0.68f), style = MaterialTheme.typography.labelSmall)
+            packageName?.let { Text("Booking: $it", color = AppColors.OnPrimary, style = MaterialTheme.typography.labelMedium) }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                Text("Like", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                Text("Komentar", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                Text("Simpan", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                Text("Bagikan", color = Color.White, style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}

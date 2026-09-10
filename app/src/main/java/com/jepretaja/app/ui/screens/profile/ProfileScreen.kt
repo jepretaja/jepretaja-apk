@@ -86,6 +86,7 @@ fun ProfileScreen(
     onHelp: () -> Unit,
     onLoggedOut: () -> Unit,
     authViewModel: AuthViewModel,
+    onSettings: () -> Unit = {},
     onEditProfile: () -> Unit = {},
     onSaved: () -> Unit = {},
     onChat: () -> Unit = {},
@@ -115,6 +116,7 @@ fun ProfileScreen(
         onMyWorks = onMyWorks,
         onSaved = onSaved,
         onLoggedOut = onLoggedOut,
+        onSettings = onSettings,
         onEditProfile = onEditProfile,
         onPostClick = onPostClick,
         onCreateWork = onCreateWork,
@@ -1246,7 +1248,7 @@ private fun PostGrid(posts: List<ExplorePostModel>, onPostClick: (String) -> Uni
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(1.dp)) {
                 row.forEach { post ->
                     Box(
-                        Modifier.weight(1f).aspectRatio(0.75f)
+                        Modifier.weight(1f).aspectRatio(16f / 9f)
                             .background(AppColors.SurfaceVariant)
                             .clickable { onPostClick(post.postId) },
                     ) {

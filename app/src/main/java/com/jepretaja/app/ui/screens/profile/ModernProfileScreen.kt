@@ -80,6 +80,7 @@ fun ModernProfileScreen(
     onMyWorks: () -> Unit,
     onSaved: () -> Unit,
     onLoggedOut: () -> Unit,
+    onSettings: () -> Unit,
     onEditProfile: () -> Unit,
     onPostClick: (String) -> Unit,
     onCreateWork: () -> Unit,
@@ -106,7 +107,6 @@ fun ModernProfileScreen(
     }.collectAsState(initial = 0)
 
     var selected by rememberSaveable { mutableStateOf(ProfileCollection.POSTS) }
-    var showSettings by remember { mutableStateOf(false) }
     var showShare by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -136,7 +136,7 @@ fun ModernProfileScreen(
                 IconButton(onClick = { showShare = true }) {
                     Icon(Icons.Default.Share, contentDescription = "Bagikan profil", tint = AppColors.TextPrimary)
                 }
-                IconButton(onClick = { showSettings = true }) {
+                IconButton(onClick = onSettings) {
                     Icon(Icons.Default.Settings, contentDescription = "Pengaturan", tint = AppColors.TextPrimary)
                 }
             }
@@ -247,43 +247,6 @@ fun ModernProfileScreen(
             Spacer(Modifier.height(AppSpacing.xxxl))
         }
 
-        if (showSettings) {
-            ModalBottomSheet(onDismissRequest = { showSettings = false }) {
-                Column(Modifier.padding(horizontal = AppSpacing.xl).padding(bottom = AppSpacing.xxxl)) {
-                    Text("Pengaturan", style = MaterialTheme.typography.headlineSmall, color = AppColors.TextPrimary)
-                    Spacer(Modifier.height(AppSpacing.md))
-                    Text("Aktivitas", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
-                    SettingsAction(Icons.Default.CalendarMonth, "Booking saya", onMyBookings)
-                    SettingsAction(Icons.AutoMirrored.Filled.Chat, "Chat", onChat)
-                    SettingsAction(Icons.Default.NotificationsNone, "Notifikasi", onNotifications)
-                    SettingsAction(Icons.Default.RateReview, "Review saya", onMyReviews)
-                    SettingsAction(Icons.Default.ReportProblem, "Laporan saya", onReports)
-                    Spacer(Modifier.height(AppSpacing.md))
-                    Text("Koleksi & sosial", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
-                    SettingsAction(Icons.Default.Favorite, "Favorit creator", onFavorites)
-                    SettingsAction(Icons.Default.BookmarkBorder, "Karya tersimpan", onSaved)
-                    SettingsAction(Icons.Default.GridView, "Karya saya", onMyWorks)
-                    SettingsAction(Icons.Default.PersonAddAlt, "Mengikuti", { onFollowList(0) })
-                    SettingsAction(Icons.Default.People, "Pengikut", { onFollowList(1) })
-                    Spacer(Modifier.height(AppSpacing.md))
-                    Text("Preferensi", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
-                    SettingsAction(Icons.Default.PersonAddAlt, "Minat dan preferensi", onInterests)
-                    SettingsAction(Icons.Default.HelpOutline, "Bantuan", onHelp)
-                    SettingsAction(Icons.Default.History, "Riwayat tontonan", onWatchHistory)
-                    if (authState.isCreator) {
-                        Spacer(Modifier.height(AppSpacing.md))
-                        Text("Creator", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
-                        SettingsAction(Icons.Default.CameraAlt, "Creator Studio", onCreatorStudio)
-                        SettingsAction(Icons.Default.GridView, "Kelola karya", onMyWorks)
-                    }
-                    Spacer(Modifier.height(AppSpacing.md))
-                    TextButton(onClick = onLoggedOut, modifier = Modifier.fillMaxWidth()) {
-                        Text("Keluar dari akun", color = AppColors.Danger)
-                    }
-                }
-            }
-        }
-
         if (showShare) {
             val link = if (authState.isCreator && uid != null) "https://jepretaja.app/creator/$uid" else "https://jepretaja.app"
             AlertDialog(
@@ -324,7 +287,7 @@ private fun PostGrid(posts: List<ExplorePostModel>, onPostClick: (String) -> Uni
         posts.chunked(3).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 row.forEach { post ->
-                    Box(Modifier.weight(1f).aspectRatio(0.82f).clip(RoundedCornerShape(4.dp)).background(AppColors.SurfaceVariant).clickable { onPostClick(post.postId) }) {
+                    Box(Modifier.weight(1f).aspectRatio(16f / 9f).clip(RoundedCornerShape(4.dp)).background(AppColors.SurfaceVariant).clickable { onPostClick(post.postId) }) {
                         AsyncImage(model = post.thumbnailUrl ?: post.mediaUrls.firstOrNull(), contentDescription = post.caption, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                         Row(Modifier.align(Alignment.BottomStart).padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
@@ -358,7 +321,3 @@ private fun BookingCollection(bookings: List<BookingModel>, onOpen: () -> Unit) 
     }
 }
 
-@Composable
-private fun SettingsAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    ListItem(headlineContent = { Text(label) }, leadingContent = { Icon(icon, contentDescription = null, tint = AppColors.Primary) }, modifier = Modifier.clickable(onClick = onClick), colors = ListItemDefaults.colors(containerColor = Color.Transparent))
-}

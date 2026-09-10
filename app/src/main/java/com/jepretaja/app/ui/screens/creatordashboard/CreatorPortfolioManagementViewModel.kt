@@ -6,8 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jepretaja.app.data.model.PortfolioModel
 import com.jepretaja.app.data.model.PortfolioStatus
+import com.jepretaja.app.core.util.MediaNormalizer
 import com.jepretaja.app.data.repository.CreatorRepository
 import com.jepretaja.app.services.StorageService
+import com.jepretaja.app.data.work.UploadNotifier
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import java.util.UUID
 
 /** Kemajuan unggahan banyak berkas sekaligus. */
 data class ProgresUnggah(
@@ -60,17 +63,25 @@ class CreatorPortfolioManagementViewModel @Inject constructor(
     fun unggahAlbum(creatorId: String, uris: List<Uri>, urutanBerikutnya: Long) {
         if (uris.isEmpty()) return
         viewModelScope.launch {
+            val uploadId = UUID.randomUUID().toString()
+            UploadNotifier.started(context, uploadId)
             _progres.value = ProgresUnggah(total = uris.size)
             val url = mutableListOf<String>()
             var gagal = 0
             var adaVideo = false
 
             uris.forEach { uri ->
+                UploadNotifier.processing(context, uploadId)
                 val video = apakahVideo(uri)
                 val hasil = runCatching {
+                    val normalized = if (video) {
+                        runCatching { MediaNormalizer.reframeVideo(context, uri) }.getOrElse { uri }
+                    } else {
+                        MediaNormalizer.normalizeImage(context, uri)
+                    }
                     storageService.uploadPortfolioMedia(
                         creatorId = creatorId,
-                        uri = uri,
+                        uri = normalized,
                         extension = if (video) "mp4" else "jpg",
                         resourceType = if (video) "video" else "image",
                     )
@@ -80,11 +91,13 @@ class CreatorPortfolioManagementViewModel @Inject constructor(
                     if (video) adaVideo = true
                 }.onFailure { gagal += 1 }
                 _progres.value = _progres.value.copy(selesai = url.size, gagal = gagal)
+                UploadNotifier.uploading(context, uploadId, url.size.toDouble() / uris.size.toDouble())
             }
 
             if (url.isEmpty()) {
                 _progres.value = ProgresUnggah()
                 _pesan.value = "Semua berkas gagal diunggah. Periksa koneksimu lalu coba lagi."
+                UploadNotifier.failure(context, uploadId, "Semua media gagal diproses.")
                 return@launch
             }
 
@@ -104,6 +117,8 @@ class CreatorPortfolioManagementViewModel @Inject constructor(
                 )
             }
             _progres.value = ProgresUnggah()
+            if (simpan.isSuccess) UploadNotifier.success(context, uploadId)
+            else UploadNotifier.failure(context, uploadId, "Media terunggah tetapi portfolio gagal disimpan.")
             _pesan.value = when {
                 simpan.isFailure -> "Media terunggah tapi albumnya gagal disimpan."
                 gagal > 0 -> "Album dibuat sebagai draft. $gagal berkas gagal diunggah."

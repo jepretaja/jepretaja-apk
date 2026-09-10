@@ -511,7 +511,7 @@ private fun ColumnScope.TabKarya(
 private fun UbinKarya(post: ExplorePostModel, onClick: () -> Unit) {
     Box(
         Modifier
-            .aspectRatio(0.75f)
+            .aspectRatio(16f / 9f)
             .clip(RoundedCornerShape(4.dp))
             .background(AppColors.SurfaceVariant)
             .clickable(onClick = onClick),

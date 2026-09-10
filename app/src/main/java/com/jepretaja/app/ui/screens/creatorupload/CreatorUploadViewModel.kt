@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import com.jepretaja.app.core.util.FirestorePaths
 import com.jepretaja.app.core.util.MediaUnggahan
+import com.jepretaja.app.core.util.MediaNormalizer
 import com.jepretaja.app.core.util.AppConstants
 import com.jepretaja.app.data.local.AppPreferences
 import com.jepretaja.app.data.local.DraftTersimpan
@@ -36,6 +37,10 @@ data class PengaturanPost(
     val location: String? = null,
     val commentPolicy: String = "all",
     val allowSave: Boolean = true,
+    val allowLike: Boolean = true,
+    val allowDownload: Boolean = false,
+    val showLikeCount: Boolean = true,
+    val visibility: String = "public",
     val durationSeconds: Long? = null,
     /** Waktu tayang yang dijadwalkan, dalam epoch millis. Null = kirim sekarang. */
     val scheduledAt: Long? = null,
@@ -100,10 +105,15 @@ class CreatorUploadViewModel @Inject constructor(
         // benar-benar menjalankan unggahannya — lihat MediaUnggahan untuk
         // uraian lengkapnya.
         val salinan = try {
-            uris.map {
+            uris.map { selected ->
+                val normalized = if (isVideo) {
+                    runCatching { MediaNormalizer.reframeVideo(context, selected) }.getOrElse { selected }
+                } else {
+                    MediaNormalizer.normalizeImage(context, selected)
+                }
                 MediaUnggahan.salin(
                     context,
-                    it,
+                    normalized,
                     if (isVideo) "mp4" else "jpg",
                     maxBytes = (if (isVideo) AppConstants.MAX_VIDEO_SIZE_MB else AppConstants.MAX_PHOTO_SIZE_MB) * 1024 * 1024,
                 )
@@ -114,7 +124,7 @@ class CreatorUploadViewModel @Inject constructor(
             return
         }
         val salinanSampul = coverUri?.let {
-            runCatching { MediaUnggahan.salin(context, it, "jpg") }.getOrNull()
+            runCatching { MediaUnggahan.salin(context, MediaNormalizer.normalizeImage(context, it), "jpg") }.getOrNull()
         }
 
         val data = UploadWorker.data(
@@ -128,6 +138,10 @@ class CreatorUploadViewModel @Inject constructor(
             location = pengaturan.location,
             commentPolicy = pengaturan.commentPolicy,
             allowSave = pengaturan.allowSave,
+            allowLike = pengaturan.allowLike,
+            allowDownload = pengaturan.allowDownload,
+            showLikeCount = pengaturan.showLikeCount,
+            visibility = pengaturan.visibility,
             durationSeconds = pengaturan.durationSeconds,
             coverUri = salinanSampul?.toString(),
             mentions = mentions,
@@ -174,6 +188,8 @@ class CreatorUploadViewModel @Inject constructor(
         target: String,
         mediaUris: List<Uri>,
         isVideo: Boolean,
+        pengaturan: PengaturanPost = PengaturanPost(),
+        coverUri: Uri? = null,
     ) {
         prefs.simpanDraft(
             DraftTersimpan(
@@ -184,6 +200,17 @@ class CreatorUploadViewModel @Inject constructor(
                 mediaUris = mediaUris.map { it.toString() },
                 isVideo = isVideo,
                 savedAt = System.currentTimeMillis(),
+                location = pengaturan.location,
+                commentPolicy = pengaturan.commentPolicy,
+                allowSave = pengaturan.allowSave,
+                allowLike = pengaturan.allowLike,
+                allowDownload = pengaturan.allowDownload,
+                showLikeCount = pengaturan.showLikeCount,
+                visibility = pengaturan.visibility,
+                packageId = pengaturan.packageId,
+                packageName = pengaturan.packageName,
+                packagePrice = pengaturan.packagePrice,
+                coverUri = coverUri?.toString(),
             )
         )
         _drafts.value = prefs.drafts

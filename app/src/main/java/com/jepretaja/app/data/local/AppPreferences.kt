@@ -108,6 +108,17 @@ class AppPreferences @Inject constructor(
                     }.orEmpty(),
                     isVideo = o.optBoolean("isVideo"),
                     savedAt = o.optLong("savedAt"),
+                    location = o.optString("location").takeIf { it.isNotBlank() },
+                    commentPolicy = o.optString("commentPolicy", "all"),
+                    allowSave = o.optBoolean("allowSave", true),
+                    allowLike = o.optBoolean("allowLike", true),
+                    allowDownload = o.optBoolean("allowDownload", false),
+                    showLikeCount = o.optBoolean("showLikeCount", true),
+                    visibility = o.optString("visibility", "public"),
+                    packageId = o.optString("packageId").takeIf { it.isNotBlank() },
+                    packageName = o.optString("packageName").takeIf { it.isNotBlank() },
+                    packagePrice = o.optLong("packagePrice", 0L).takeIf { it > 0 },
+                    coverUri = o.optString("coverUri").takeIf { it.isNotBlank() },
                 )
             }.sortedByDescending { it.savedAt }
         }.getOrDefault(emptyList())
@@ -131,6 +142,17 @@ class AppPreferences @Inject constructor(
                     .put("mediaUris", JSONArray().apply { d.mediaUris.forEach { put(it) } })
                     .put("isVideo", d.isVideo)
                     .put("savedAt", d.savedAt)
+                    .put("location", d.location)
+                    .put("commentPolicy", d.commentPolicy)
+                    .put("allowSave", d.allowSave)
+                    .put("allowLike", d.allowLike)
+                    .put("allowDownload", d.allowDownload)
+                    .put("showLikeCount", d.showLikeCount)
+                    .put("visibility", d.visibility)
+                    .put("packageId", d.packageId)
+                    .put("packageName", d.packageName)
+                    .put("packagePrice", d.packagePrice)
+                    .put("coverUri", d.coverUri)
             )
         }
         prefs.edit().putString(KEY_DRAFTS, array.toString()).apply()
@@ -246,4 +268,15 @@ data class DraftTersimpan(
     val mediaUris: List<String>,
     val isVideo: Boolean,
     val savedAt: Long,
+    val location: String? = null,
+    val commentPolicy: String = "all",
+    val allowSave: Boolean = true,
+    val allowLike: Boolean = true,
+    val allowDownload: Boolean = false,
+    val showLikeCount: Boolean = true,
+    val visibility: String = "public",
+    val packageId: String? = null,
+    val packageName: String? = null,
+    val packagePrice: Long? = null,
+    val coverUri: String? = null,
 )

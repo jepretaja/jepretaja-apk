@@ -53,7 +53,7 @@ fun CreatorCard(
     val shape = RoundedCornerShape(18.dp)
     Box(
         modifier
-            .aspectRatio(0.75f)
+            .aspectRatio(16f / 9f)
             .premiumShadow(8.dp, shape)
             .clip(shape)
             .background(AppColors.SurfaceVariant)

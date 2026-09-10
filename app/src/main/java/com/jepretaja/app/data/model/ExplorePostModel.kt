@@ -29,6 +29,10 @@ data class ExplorePostModel(
     val commentPolicy: String = "all",
     /** Creator bisa mematikan tombol simpan untuk karyanya. */
     val allowSave: Boolean = true,
+    val allowLike: Boolean = true,
+    val allowDownload: Boolean = false,
+    val showLikeCount: Boolean = true,
+    val visibility: String = "public",
 
     /**
      * Paket jasa yang dipakai di sesi ini.

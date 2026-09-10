@@ -38,6 +38,7 @@ object Routes {
     const val FAVORITES = "favorites"
     const val PROFILE = "profile"
     const val EDIT_PROFILE = "profile/edit"
+    const val SETTINGS = "settings"
     const val SAVED_POSTS = "profile/saved"
     const val FOLLOW_LIST = "follows/{targetUserId}/{tab}"
     const val HELP = "help"

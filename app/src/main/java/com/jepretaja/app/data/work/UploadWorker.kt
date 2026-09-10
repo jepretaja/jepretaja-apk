@@ -41,6 +41,7 @@ class UploadWorker(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        UploadNotifier.started(applicationContext, id.toString())
         val creatorId = inputData.getString(KEY_CREATOR_ID) ?: return Result.failure()
         val creatorName = inputData.getString(KEY_CREATOR_NAME).orEmpty()
         val uris = inputData.getStringArray(KEY_URIS)?.toList().orEmpty()
@@ -53,6 +54,10 @@ class UploadWorker(
         val location = inputData.getString(KEY_LOCATION)
         val commentPolicy = inputData.getString(KEY_COMMENT_POLICY) ?: "all"
         val allowSave = inputData.getBoolean(KEY_ALLOW_SAVE, true)
+        val allowLike = inputData.getBoolean(KEY_ALLOW_LIKE, true)
+        val allowDownload = inputData.getBoolean(KEY_ALLOW_DOWNLOAD, false)
+        val showLikeCount = inputData.getBoolean(KEY_SHOW_LIKE_COUNT, true)
+        val visibility = inputData.getString(KEY_VISIBILITY) ?: "public"
         val durasi = inputData.getLong(KEY_DURATION, 0L).takeIf { it > 0 }
         val coverUri = inputData.getString(KEY_COVER)
         val packageId = inputData.getString(KEY_PACKAGE_ID)
@@ -64,6 +69,7 @@ class UploadWorker(
         val db = FirebaseFirestore.getInstance()
 
         return try {
+            UploadNotifier.processing(applicationContext, id.toString())
             if (isVideo) {
                 val docRef = db.collection(FirestorePaths.EXPLORE_POSTS).document()
                 // onProgress dipanggil dari benang unggahan dan BUKAN fungsi
@@ -73,6 +79,7 @@ class UploadWorker(
                 // sebelum eksekusi lanjut ke penulisan dokumen.
                 val video = coroutineScope {
                     storage.uploadExploreVideo(creatorId, docRef.id, Uri.parse(uris.first()), "mp4") { p ->
+                        UploadNotifier.uploading(applicationContext, id.toString(), p)
                         launch { laporkan(p) }
                     }
                 }
@@ -83,7 +90,7 @@ class UploadWorker(
                 docRef.set(
                     dokumenPost(
                         creatorId, creatorName, "video", listOf(video.url), sampul,
-                        caption, category, location, mentions, commentPolicy, allowSave, durasi, "Explore",
+                        caption, category, location, mentions, commentPolicy, allowSave, allowLike, allowDownload, showLikeCount, visibility, durasi, "Explore",
                         packageId, packageName, packagePrice,
                     )
                 ).await()
@@ -116,7 +123,7 @@ class UploadWorker(
                     db.collection(FirestorePaths.EXPLORE_POSTS).add(
                         dokumenPost(
                             creatorId, creatorName, "photo", urls, urls.first(),
-                            caption, category, location, mentions, commentPolicy, allowSave, null, target,
+                            caption, category, location, mentions, commentPolicy, allowSave, allowLike, allowDownload, showLikeCount, visibility, null, target,
                             packageId, packageName, packagePrice,
                         )
                     ).await()
@@ -126,11 +133,14 @@ class UploadWorker(
             // tertulis. Membuangnya lebih awal berarti percobaan ulang setelah
             // gangguan jaringan tidak punya lagi berkas untuk diunggah.
             MediaUnggahan.bersihkan(applicationContext, uris + listOfNotNull(coverUri))
+            UploadNotifier.saving(applicationContext, id.toString())
+            UploadNotifier.success(applicationContext, id.toString())
             Result.success(workDataOf(KEY_PROGRESS to 1f))
         } catch (e: SecurityException) {
             // Seharusnya tidak terjadi lagi sejak media disalin lebih dulu, tapi
             // kalau toh terjadi, pesannya harus menyebut sebab yang sebenarnya —
             // bukan "unggahan gagal" yang tidak bisa ditindaklanjuti siapa pun.
+            UploadNotifier.failure(applicationContext, id.toString(), "Media tidak bisa dibaca lagi.")
             gagalkan(
                 caption, category, target, uris, isVideo,
                 pesan = "Media tidak bisa dibaca lagi. Buka Draft, pilih ulang fotonya, lalu unggah lagi.",
@@ -147,6 +157,7 @@ class UploadWorker(
             if (!permanen && runAttemptCount < 3) {
                 Result.retry()
             } else {
+                UploadNotifier.failure(applicationContext, id.toString(), detail ?: "Koneksi terputus.")
                 gagalkan(
                     caption,
                     category,
@@ -157,6 +168,7 @@ class UploadWorker(
                 )
             }
         } catch (e: Exception) {
+            UploadNotifier.failure(applicationContext, id.toString(), "Upload tidak dapat diproses.")
             gagalkan(caption, category, target, uris, isVideo)
         }
     }
@@ -208,6 +220,10 @@ class UploadWorker(
         mentions: List<Map<String, String>>,
         commentPolicy: String,
         allowSave: Boolean,
+        allowLike: Boolean,
+        allowDownload: Boolean,
+        showLikeCount: Boolean,
+        visibility: String,
         durationSeconds: Long?,
         target: String,
         packageId: String?,
@@ -221,6 +237,10 @@ class UploadWorker(
         "mentions" to mentions,
         "commentPolicy" to commentPolicy,
         "allowSave" to allowSave,
+        "allowLike" to allowLike,
+        "allowDownload" to allowDownload,
+        "showLikeCount" to showLikeCount,
+        "visibility" to visibility,
         "durationSeconds" to durationSeconds,
         "target" to target,
         "packageId" to packageId,
@@ -251,6 +271,10 @@ class UploadWorker(
         const val KEY_LOCATION = "location"
         const val KEY_COMMENT_POLICY = "commentPolicy"
         const val KEY_ALLOW_SAVE = "allowSave"
+        const val KEY_ALLOW_LIKE = "allowLike"
+        const val KEY_ALLOW_DOWNLOAD = "allowDownload"
+        const val KEY_SHOW_LIKE_COUNT = "showLikeCount"
+        const val KEY_VISIBILITY = "visibility"
         const val KEY_DURATION = "durationSeconds"
         const val KEY_COVER = "coverUri"
         const val KEY_MENTIONS = "mentions"
@@ -271,6 +295,10 @@ class UploadWorker(
             location: String?,
             commentPolicy: String,
             allowSave: Boolean,
+            allowLike: Boolean,
+            allowDownload: Boolean,
+            showLikeCount: Boolean,
+            visibility: String,
             durationSeconds: Long?,
             coverUri: String?,
             mentions: List<Map<String, String>>,
@@ -288,6 +316,10 @@ class UploadWorker(
             KEY_LOCATION to location,
             KEY_COMMENT_POLICY to commentPolicy,
             KEY_ALLOW_SAVE to allowSave,
+            KEY_ALLOW_LIKE to allowLike,
+            KEY_ALLOW_DOWNLOAD to allowDownload,
+            KEY_SHOW_LIKE_COUNT to showLikeCount,
+            KEY_VISIBILITY to visibility,
             KEY_DURATION to (durationSeconds ?: 0L),
             KEY_COVER to coverUri,
             KEY_PACKAGE_ID to packageId,

@@ -36,7 +36,7 @@ import com.jepretaja.app.ui.state.AuthViewModel
 private val mainTabs = listOf(
     NavTab("tab_home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
     NavTab("tab_explore", "Explore", Icons.Filled.Explore, Icons.Outlined.Explore),
-    NavTab("tab_inbox", "Kotak Masuk", Icons.Filled.Markunread, Icons.Outlined.Markunread),
+    NavTab("tab_inbox", "Pesan", Icons.Filled.Markunread, Icons.Outlined.Markunread),
     NavTab("tab_profile", "Profile", Icons.Filled.Person, Icons.Outlined.Person),
 )
 
@@ -123,7 +123,6 @@ fun CustomerRootShell(
                     authViewModel = authViewModel,
                     onSearch = { outerNavController.navigate(Routes.SEARCH) },
                     onCreatorClick = { id -> outerNavController.navigate(Routes.creatorProfile(id)) },
-                    onCommentClick = { postId -> outerNavController.navigate(Routes.exploreDetail(postId)) },
                     onTagClick = { tag, isCategory ->
                         outerNavController.navigate(Routes.tagFeed(tag, isCategory))
                     },
@@ -140,6 +139,7 @@ fun CustomerRootShell(
             composable("tab_profile") {
                 ProfileScreen(
                     onLogin = { outerNavController.navigate(Routes.LOGIN) },
+                    onSettings = { outerNavController.navigate(Routes.SETTINGS) },
                     onEditProfile = { outerNavController.navigate(Routes.EDIT_PROFILE) },
                     onSaved = { outerNavController.navigate(Routes.SAVED_POSTS) },
                     onMyBookings = { bukaBooking() },

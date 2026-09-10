@@ -71,7 +71,7 @@ fun SavedPostsScreen(
             ) {
                 items(posts) { post ->
                     Box(
-                        Modifier.aspectRatio(0.75f)
+                        Modifier.aspectRatio(16f / 9f)
                             .premiumShadow(4.dp, MaterialTheme.shapes.medium)
                             .clip(MaterialTheme.shapes.medium)
                             .background(AppColors.SurfaceVariant)

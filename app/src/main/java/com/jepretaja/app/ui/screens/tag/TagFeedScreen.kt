@@ -95,7 +95,7 @@ fun TagFeedScreen(
                 ) {
                     items(posts) { post ->
                         Box(
-                            Modifier.aspectRatio(0.75f)
+                            Modifier.aspectRatio(16f / 9f)
                                 .background(AppColors.SurfaceVariant)
                                 .clickable { onPostClick(post.postId) },
                         ) {

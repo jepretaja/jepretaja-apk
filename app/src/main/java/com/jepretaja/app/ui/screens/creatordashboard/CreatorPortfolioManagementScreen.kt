@@ -355,7 +355,7 @@ private fun KartuAlbum(
         Box(
             Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f)
+                .aspectRatio(16f / 9f)
                 .premiumShadow(4.dp, bentuk)
                 .clip(bentuk)
                 .background(AppColors.SurfaceVariant)

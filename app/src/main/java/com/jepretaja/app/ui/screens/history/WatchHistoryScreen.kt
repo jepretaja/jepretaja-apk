@@ -111,7 +111,7 @@ fun WatchHistoryScreen(
             ) {
                 items(posts) { post ->
                     Box(
-                        Modifier.aspectRatio(0.75f).background(AppColors.SurfaceVariant)
+                        Modifier.aspectRatio(16f / 9f).background(AppColors.SurfaceVariant)
                             .clickable { onPostClick(post.postId) },
                     ) {
                         AsyncImage(

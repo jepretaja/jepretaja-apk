@@ -23,6 +23,8 @@ import com.jepretaja.app.ui.components.EmptyState
 import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.components.rememberAppTopBarScrollBehavior
 import com.jepretaja.app.ui.state.AuthViewModel
+import com.jepretaja.app.data.work.UploadQueue
+import androidx.work.WorkInfo
 
 /** Jenis notifikasi yang lahir dari interaksi sosial, bukan dari transaksi. */
 private val JENIS_SOSIAL = setOf("like", "comment", "follow")
@@ -34,10 +36,12 @@ private val JUDUL_TAB = listOf("Semua", "Suka", "Komentar", "Pengikut", "Sistem"
 fun NotificationsScreen(
     onBack: () -> Unit,
     authViewModel: AuthViewModel,
+    onUploadClick: () -> Unit = {},
     viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
     val authState by authViewModel.uiState.collectAsState()
     val myUid = authState.uid
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     var tab by remember { mutableIntStateOf(0) }
     val scrollBehavior = rememberAppTopBarScrollBehavior()
@@ -51,6 +55,7 @@ fun NotificationsScreen(
             return@Scaffold
         }
         val semua by remember(myUid) { viewModel.stream(myUid) }.collectAsState(initial = emptyList())
+        val uploads by remember { UploadQueue.stream(context) }.collectAsState(initial = emptyList())
 
         // Tab mengikuti pola inbox TikTok. Kategorinya ditentukan field `type`
         // yang sudah lama ada di NotificationModel tapi tidak pernah dipakai
@@ -103,6 +108,24 @@ fun NotificationsScreen(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                if (tab == 0 || tab == 4) {
+                    items(uploads, key = { "upload_${it.id}" }) { upload ->
+                        val (title, body) = when (upload.state) {
+                            WorkInfo.State.RUNNING -> "Upload sedang berjalan" to "Media sedang diproses dan diunggah. ${(upload.progress * 100).toInt()}%"
+                            WorkInfo.State.SUCCEEDED -> "Upload selesai" to "Postingan siap dilihat di JepretAja."
+                            WorkInfo.State.FAILED -> "Upload gagal" to (upload.error ?: "Media gagal diproses. Coba lagi.")
+                            WorkInfo.State.CANCELLED -> "Upload dibatalkan" to "Upload belum selesai dan dapat dimulai lagi."
+                            else -> "Media siap upload" to "Upload menunggu jaringan atau giliran."
+                        }
+                        PremiumCard(modifier = Modifier.fillMaxWidth(), elevation = 4.dp, onClick = onUploadClick) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Notifications, contentDescription = null, tint = AppColors.Primary, modifier = Modifier.size(22.dp))
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) { Text(title, style = MaterialTheme.typography.titleSmall); Text(body, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary) }
+                            }
+                        }
+                    }
+                }
                 items(items) { n ->
                     val unread = n.readAt == null
                     PremiumCard(
