@@ -155,6 +155,13 @@ class UploadWorker(
                 || detail?.contains("tidak mengembalikan URL") == true
                 || detail?.contains("Ukuran berkas melebihi batas") == true
             if (!permanen && runAttemptCount < 3) {
+                UploadNotifier.update(
+                    applicationContext,
+                    id.toString(),
+                    "Upload dilanjutkan",
+                    "Koneksi terputus. Upload akan mencoba lagi otomatis.",
+                    ongoing = true,
+                )
                 Result.retry()
             } else {
                 UploadNotifier.failure(applicationContext, id.toString(), detail ?: "Koneksi terputus.")
