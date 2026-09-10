@@ -27,6 +27,9 @@ import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.WorkOutline
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,6 +50,7 @@ import com.jepretaja.app.data.model.BookingModel
 import com.jepretaja.app.data.model.ExplorePostModel
 import com.jepretaja.app.ui.components.AppAvatar
 import com.jepretaja.app.ui.components.EmptyState
+import com.jepretaja.app.ui.components.GradientHeroCard
 import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.components.QrCode
 import com.jepretaja.app.ui.components.SkeletonPostTile
@@ -142,6 +146,14 @@ fun ModernProfileScreen(
                 Spacer(Modifier.height(AppSpacing.sm))
                 Text(name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.W700, color = AppColors.TextPrimary)
                 Text(username, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+                if (creator?.verified == true) {
+                    Spacer(Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Verified, contentDescription = null, tint = AppColors.Info, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Creator Terverifikasi", style = MaterialTheme.typography.labelMedium, color = AppColors.Info)
+                    }
+                }
                 creator?.bio?.takeIf { it.isNotBlank() }?.let {
                     Spacer(Modifier.height(AppSpacing.sm))
                     Text(it, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = AppSpacing.xxl))
@@ -152,20 +164,63 @@ fun ModernProfileScreen(
                         Text("Edit Profil", style = MaterialTheme.typography.labelLarge)
                     }
                     if (authState.isCreator) {
-                        Button(onClick = onCreateWork, shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f).height(42.dp)) {
-                            Text("Buat Karya", style = MaterialTheme.typography.labelLarge)
+                        OutlinedButton(onClick = { showShare = true }, shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f).height(42.dp)) {
+                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(17.dp))
+                            Spacer(Modifier.width(5.dp))
+                            Text("Bagikan", style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
             }
 
+            if (authState.isCreator) {
+                Spacer(Modifier.height(AppSpacing.lg))
+                GradientHeroCard(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xl),
+                    colors = listOf(AppColors.PrimaryDark, AppColors.Primary),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Creator Studio", style = MaterialTheme.typography.titleLarge, color = AppColors.OnPrimary)
+                            Spacer(Modifier.height(4.dp))
+                            Text("Kelola karya, booking, layanan, dan pendapatanmu.", style = MaterialTheme.typography.bodySmall, color = AppColors.OnPrimary.copy(alpha = 0.78f))
+                        }
+                        Icon(Icons.Default.WorkOutline, contentDescription = null, tint = AppColors.OnPrimary, modifier = Modifier.size(28.dp))
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    Button(
+                        onClick = onCreatorStudio,
+                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.OnPrimary, contentColor = AppColors.PrimaryDark),
+                        shape = RoundedCornerShape(percent = 50),
+                    ) { Text("Masuk ke Studio Creator  →") }
+                }
+            }
+
             Spacer(Modifier.height(AppSpacing.lg))
-            Row(Modifier.fillMaxWidth().padding(horizontal = AppSpacing.sm), horizontalArrangement = Arrangement.SpaceEvenly) {
-                ProfileMetric("$followingCount", "Mengikuti")
+            Row(Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xl), horizontalArrangement = Arrangement.SpaceEvenly) {
                 ProfileMetric("$followerCount", "Pengikut")
-                ProfileMetric("$likes", "Suka")
-                ProfileMetric("${saved.size}", "Tersimpan")
+                ProfileMetric("$followingCount", "Mengikuti")
                 ProfileMetric("$bookingCount", "Booking")
+            }
+
+            creator?.let { profile ->
+                Spacer(Modifier.height(AppSpacing.md))
+                Column(Modifier.padding(horizontal = AppSpacing.xl), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (profile.categories.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.WorkOutline, contentDescription = null, tint = AppColors.Primary, modifier = Modifier.size(17.dp))
+                            Spacer(Modifier.width(7.dp))
+                            Text(profile.categories.joinToString(" & "), style = MaterialTheme.typography.bodyMedium, color = AppColors.TextPrimary)
+                        }
+                    }
+                    profile.city?.takeIf { it.isNotBlank() }?.let { city ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = AppColors.TextSecondary, modifier = Modifier.size(17.dp))
+                            Spacer(Modifier.width(7.dp))
+                            Text(city, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary)
+                        }
+                    }
+                }
             }
 
             Spacer(Modifier.height(AppSpacing.lg))

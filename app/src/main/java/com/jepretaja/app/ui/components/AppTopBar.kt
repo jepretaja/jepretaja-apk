@@ -1,6 +1,11 @@
 package com.jepretaja.app.ui.components
 
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -12,6 +17,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import com.jepretaja.app.core.theme.AppColors
@@ -40,37 +46,47 @@ fun AppTopBar(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
+    titleContent: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    TopAppBar(
+    val state = scrollBehavior?.state
+    val tersembunyi = state != null
+        && state.heightOffsetLimit < 0f
+        && state.heightOffset <= state.heightOffsetLimit + 1f
+
+    AnimatedVisibility(
+        visible = !tersembunyi,
         modifier = modifier,
-        title = {
-            Text(
-                title,
-                style = MaterialTheme.typography.titleLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        navigationIcon = {
-            if (onBack != null) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+        enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+        exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
+    ) {
+        TopAppBar(
+            title = titleContent ?: {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            },
+            navigationIcon = {
+                if (onBack != null) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                    }
                 }
-            }
-        },
-        actions = actions,
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = AppColors.Background,
-            // Warna saat sebagian tergulung: sedikit berbeda dari latar supaya
-            // header tetap terbaca sebagai lapisan di atas konten.
-            scrolledContainerColor = AppColors.Surface,
-            titleContentColor = AppColors.TextPrimary,
-            navigationIconContentColor = AppColors.TextPrimary,
-            actionIconContentColor = AppColors.TextPrimary,
-        ),
-        scrollBehavior = scrollBehavior,
-    )
+            },
+            actions = actions,
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = AppColors.Background,
+                scrolledContainerColor = AppColors.Surface,
+                titleContentColor = AppColors.TextPrimary,
+                navigationIconContentColor = AppColors.TextPrimary,
+                actionIconContentColor = AppColors.TextPrimary,
+            ),
+            scrollBehavior = scrollBehavior,
+        )
+    }
 }
 
 /**

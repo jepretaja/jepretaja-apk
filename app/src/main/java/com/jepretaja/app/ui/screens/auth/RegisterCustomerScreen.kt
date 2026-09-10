@@ -31,13 +31,7 @@ fun RegisterCustomerScreen(
     Scaffold(
         containerColor = AppColors.Background,
         topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali") }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = AppColors.Background),
-            )
+            com.jepretaja.app.ui.components.AppTopBar(title = "", onBack = onBack)
         },
     ) { padding ->
         Column(

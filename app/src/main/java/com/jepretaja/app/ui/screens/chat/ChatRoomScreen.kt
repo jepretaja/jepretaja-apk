@@ -123,13 +123,10 @@ fun ChatRoomScreen(
         containerColor = AppColors.Background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
-                    }
-                },
-                title = {
+            com.jepretaja.app.ui.components.AppTopBar(
+                title = "",
+                onBack = onBack,
+                titleContent = {
                     // Kepala ruang chat menampilkan siapa lawan bicaranya, bukan
                     // kata "Chat". Nama dan wajah adalah satu-satunya cara
                     // memastikan pesan tidak dikirim ke percakapan yang keliru.
@@ -173,12 +170,6 @@ fun ChatRoomScreen(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppColors.Background,
-                    titleContentColor = AppColors.TextPrimary,
-                    navigationIconContentColor = AppColors.TextPrimary,
-                    actionIconContentColor = AppColors.TextPrimary,
-                ),
             )
         },
     ) { padding ->

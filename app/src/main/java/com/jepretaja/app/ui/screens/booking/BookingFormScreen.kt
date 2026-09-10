@@ -107,19 +107,7 @@ fun BookingFormScreen(
     Scaffold(
         containerColor = AppColors.Background,
         topBar = {
-            TopAppBar(
-                title = { Text("Form Booking") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppColors.Background,
-                    titleContentColor = AppColors.TextPrimary,
-                    navigationIconContentColor = AppColors.TextPrimary,
-                ),
-            )
+            com.jepretaja.app.ui.components.AppTopBar(title = "Form Booking", onBack = onBack)
         },
         bottomBar = {
             if (state.pkg != null) {

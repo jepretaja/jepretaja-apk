@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -33,6 +34,7 @@ import com.jepretaja.app.ui.components.GradientHeroCard
 import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.components.SectionHeader
 import com.jepretaja.app.ui.components.StatTile
+import com.jepretaja.app.ui.components.StatusBadge
 import com.jepretaja.app.ui.components.rememberAppTopBarScrollBehavior
 import com.jepretaja.app.ui.state.AuthViewModel
 
@@ -152,6 +154,83 @@ fun CreatorDashboardScreen(
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState())) {
 
             Spacer(Modifier.height(4.dp))
+
+            PremiumCard(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                elevation = 3.dp,
+                color = AppColors.Surface,
+            ) {
+                Text(
+                    "Selamat datang,",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppColors.TextSecondary,
+                )
+                Text(
+                    "${creator?.displayName?.ifBlank { null } ?: authState.profile?.name ?: "Creator"} 👋",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.W700,
+                    color = AppColors.TextPrimary,
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(9.dp).clip(CircleShape).background(if (creator?.status == "active") AppColors.Success else AppColors.Warning))
+                    Spacer(Modifier.width(7.dp))
+                    Text(
+                        if (creator?.status == "active") "AKTIF" else "PERLU PERHATIAN",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.W700,
+                        color = if (creator?.status == "active") AppColors.Success else AppColors.Warning,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        if (creator?.acceptingBookings == true) "Menerima booking" else "Booking ditutup",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = AppColors.TextSecondary,
+                    )
+                }
+            }
+
+            val hariIni = remember { java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.US).format(java.util.Date()) }
+            val bookingHariIni = bookings.filter { booking ->
+                booking.date?.toDate()?.let { java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.US).format(it) == hariIni } == true
+            }.take(3)
+            Spacer(Modifier.height(22.dp))
+            SectionHeader("Booking Hari Ini", subtitle = if (bookingHariIni.isEmpty()) "Tidak ada jadwal hari ini" else "${bookingHariIni.size} jadwal perlu disiapkan")
+            Spacer(Modifier.height(10.dp))
+            if (bookingHariIni.isEmpty()) {
+                PremiumCard(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    elevation = 2.dp,
+                    color = AppColors.SurfaceVariant,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.EventAvailable, contentDescription = null, tint = AppColors.Success)
+                        Spacer(Modifier.width(10.dp))
+                        Text("Hari ini masih kosong. Waktu yang baik untuk menambah karya atau mengatur jadwal.", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+                    }
+                }
+            } else {
+                Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    bookingHariIni.forEach { booking ->
+                        PremiumCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = 2.dp,
+                            onClick = { onNavigate(Routes.CREATOR_BOOKING_MANAGEMENT) },
+                            contentPadding = PaddingValues(12.dp),
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(booking.time.ifBlank { "--:--" }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.W700, color = AppColors.Primary)
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(booking.packageName, style = MaterialTheme.typography.titleSmall, color = AppColors.TextPrimary)
+                                    Text(booking.location.ifBlank { "Lokasi belum diatur" }, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+                                }
+                                StatusBadge(booking.status)
+                            }
+                        }
+                    }
+                }
+            }
 
             // --- Saldo ---
             GradientHeroCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {

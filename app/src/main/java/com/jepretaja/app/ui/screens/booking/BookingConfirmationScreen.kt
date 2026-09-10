@@ -32,9 +32,7 @@ fun BookingConfirmationScreen(
     Scaffold(
         containerColor = AppColors.Background,
         topBar = {
-            TopAppBar(title = { Text("Review Booking") }, navigationIcon = {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali") }
-            })
+            com.jepretaja.app.ui.components.AppTopBar(title = "Review Booking", onBack = onBack)
         },
     ) { padding ->
         when {

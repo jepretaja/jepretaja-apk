@@ -21,13 +21,15 @@ data class PaymentModel(
     val provider: String = "",
     val method: String = "",
     val orderId: String? = null,
+    val snapToken: String? = null,
+    val redirectUrl: String? = null,
     val amount: Long = 0,
     val uniqueCode: Long = 0,
     val transferAmount: Long = 0,
     val bankName: String = "",
     val bankAccountNumber: String = "",
     val bankAccountName: String = "",
-    /** awaiting_transfer | paid | rejected — kosakata server. */
+    /** pending | paid | rejected — status Midtrans yang sudah dinormalisasi. */
     val status: String = "unpaid",
     val expiresAt: Timestamp? = null,
     val paidAt: Timestamp? = null,

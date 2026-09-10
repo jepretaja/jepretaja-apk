@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,8 @@ import com.jepretaja.app.ui.components.KartuSlipPembayaran
 import com.jepretaja.app.ui.components.PremiumCard
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -82,6 +85,7 @@ fun PaymentScreen(
     val processing by viewModel.processing.collectAsState()
     val error by viewModel.error.collectAsState()
     val info by viewModel.transfer.collectAsState()
+    val snapUrl by viewModel.snapUrl.collectAsState()
     val sudahDeklarasi by viewModel.sudahDeklarasi.collectAsState()
     val memuat by viewModel.memuat.collectAsState()
     val errorMuat by viewModel.errorMuat.collectAsState()
@@ -124,19 +128,7 @@ fun PaymentScreen(
         containerColor = AppColors.Background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Pembayaran") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppColors.Background,
-                    titleContentColor = AppColors.TextPrimary,
-                    navigationIconContentColor = AppColors.TextPrimary,
-                ),
-            )
+            com.jepretaja.app.ui.components.AppTopBar(title = "Pembayaran", onBack = onBack)
         },
     ) { padding ->
         if (memuat && booking == null) {
@@ -185,10 +177,31 @@ fun PaymentScreen(
                     Spacer(Modifier.height(14.dp))
                 }
 
+                if (snapUrl != null && status != StatusBayar.BERHASIL) {
+                    PremiumCard(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                        Text("Pembayaran Midtrans", style = MaterialTheme.typography.titleMedium, color = AppColors.TextPrimary, fontWeight = FontWeight.W700)
+                        Spacer(Modifier.height(6.dp))
+                        Text("Selesaikan pembayaran melalui halaman aman Midtrans di bawah ini. Status booking akan diperbarui otomatis.", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+                        Spacer(Modifier.height(12.dp))
+                        AndroidView(
+                            factory = { context ->
+                                WebView(context).apply {
+                                    settings.javaScriptEnabled = true
+                                    settings.domStorageEnabled = true
+                                    webViewClient = WebViewClient()
+                                    loadUrl(snapUrl!!)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(520.dp).clip(MaterialTheme.shapes.medium),
+                        )
+                    }
+                    Spacer(Modifier.height(14.dp))
+                }
+
                 // Rekening hanya masuk akal selama uangnya memang belum masuk.
                 // Menampilkannya pada pembayaran yang sudah disetujui mengundang
                 // orang mentransfer dua kali.
-                if (status == StatusBayar.MENUNGGU || status == StatusBayar.DIPROSES) {
+                if (snapUrl == null && (status == StatusBayar.MENUNGGU || status == StatusBayar.DIPROSES)) {
                     val instruksi = info
                     if (instruksi == null) {
                         KartuCatatan(
@@ -252,6 +265,7 @@ fun PaymentScreen(
                         status == StatusBayar.GAGAL -> "Minta Instruksi Baru"
                         status == StatusBayar.KEDALUWARSA -> "Minta Instruksi Baru"
                         status == StatusBayar.DIPROSES -> "Lihat Status Booking"
+                        snapUrl != null -> "Pembayaran Midtrans Aktif"
                         info == null -> "Tampilkan Cara Bayar"
                         else -> "Saya Sudah Transfer"
                     },
@@ -276,7 +290,7 @@ fun PaymentScreen(
                             }
                         }
                     },
-                    enabled = !processing,
+                    enabled = !processing && snapUrl == null,
                     loading = processing,
                 )
                 // Jalan mundur untuk yang salah tekan. Tanpa ini, satu ketukan

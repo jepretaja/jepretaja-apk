@@ -159,9 +159,7 @@ fun ExploreDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Komentar", style = MaterialTheme.typography.headlineSmall) }, navigationIcon = {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali") }
-            })
+            com.jepretaja.app.ui.components.AppTopBar(title = "Komentar", onBack = onBack)
         },
         bottomBar = {
             Column(Modifier.fillMaxWidth()) {

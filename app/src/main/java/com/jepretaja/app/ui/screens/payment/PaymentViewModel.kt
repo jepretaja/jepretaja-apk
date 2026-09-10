@@ -81,6 +81,9 @@ class PaymentViewModel @Inject constructor(
     private val _transfer = MutableStateFlow<ManualTransferInfo?>(null)
     val transfer: StateFlow<ManualTransferInfo?> = _transfer.asStateFlow()
 
+    private val _snapUrl = MutableStateFlow<String?>(null)
+    val snapUrl: StateFlow<String?> = _snapUrl.asStateFlow()
+
     private val _sudahDeklarasi = MutableStateFlow(false)
     val sudahDeklarasi: StateFlow<Boolean> = _sudahDeklarasi.asStateFlow()
 
@@ -132,6 +135,7 @@ class PaymentViewModel @Inject constructor(
             paymentRepository.streamPaymentForBooking(bookingId).catch { emit(emptyList()) }.collect { daftar ->
                 val doc = daftar.firstOrNull()
                 _payment.value = doc
+                _snapUrl.value = doc?.redirectUrl
                 selaraskanInstruksi(doc)
             }
         }
@@ -208,6 +212,7 @@ class PaymentViewModel @Inject constructor(
             AnalyticsService.logPaymentStarted(bookingId)
             try {
                 val hasil = paymentRepository.createPaymentOrder(bookingId)
+                _snapUrl.value = hasil["redirectUrl"] as? String
                 val info = ManualTransferInfo(
                     paymentId = hasil["paymentId"] as? String ?: "",
                     amount = angka(hasil["amount"]),

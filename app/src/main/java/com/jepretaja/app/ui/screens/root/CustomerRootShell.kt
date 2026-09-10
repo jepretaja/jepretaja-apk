@@ -19,13 +19,13 @@ import com.jepretaja.app.ui.components.LoginRequiredSheet
 import com.jepretaja.app.ui.components.NavTab
 import com.jepretaja.app.ui.screens.explore.ExploreScreen
 import com.jepretaja.app.ui.screens.home.HomeScreen
-import com.jepretaja.app.ui.screens.home.MyBookingsScreen
+import com.jepretaja.app.ui.screens.inbox.InboxScreen
 import com.jepretaja.app.ui.screens.profile.ProfileScreen
 import com.jepretaja.app.ui.screens.search.SearchFilters
 import com.jepretaja.app.ui.state.AuthViewModel
 
 /**
- * Empat menu untuk SEMUA orang: Home | Explore | Booking | Profile.
+ * Empat menu untuk SEMUA orang: Home | Explore | Kotak Masuk | Profile.
  *
  * Chat sengaja tidak lagi menempati satu slot di sini — ia pindah ke pojok
  * kanan atas layar Home. Alasannya: chat adalah tempat yang dituju setelah ada
@@ -36,7 +36,7 @@ import com.jepretaja.app.ui.state.AuthViewModel
 private val mainTabs = listOf(
     NavTab("tab_home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
     NavTab("tab_explore", "Explore", Icons.Filled.Explore, Icons.Outlined.Explore),
-    NavTab("tab_bookings", "Booking", Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth),
+    NavTab("tab_inbox", "Kotak Masuk", Icons.Filled.Markunread, Icons.Outlined.Markunread),
     NavTab("tab_profile", "Profile", Icons.Filled.Person, Icons.Outlined.Person),
 )
 
@@ -75,7 +75,7 @@ fun CustomerRootShell(
     // membuat orang mau mendaftar. Yang dijaga hanya menu yang isinya memang
     // milik satu akun.
     fun bukaBooking() {
-        if (tamu) mintaMasuk = FiturButuhAkun.BOOKING else innerNav.navigate("tab_bookings")
+        if (tamu) mintaMasuk = FiturButuhAkun.BOOKING else innerNav.navigate("tab_inbox")
     }
 
     fun bukaChat() {
@@ -91,7 +91,7 @@ fun CustomerRootShell(
             tabs = mainTabs,
             currentRoute = currentRoute,
             onSelect = { route ->
-                if (route == "tab_bookings" && tamu) {
+                if (route == "tab_inbox" && tamu) {
                     mintaMasuk = FiturButuhAkun.BOOKING
                 } else {
                     innerNav.navigate(route) { popUpTo("tab_home") { saveState = true }; launchSingleTop = true; restoreState = true }
@@ -130,8 +130,9 @@ fun CustomerRootShell(
                     onPackageClick = { id -> outerNavController.navigate(Routes.packageDetail(id)) },
                 )
             }
-            composable("tab_bookings") {
-                MyBookingsScreen(
+            composable("tab_inbox") {
+                InboxScreen(
+                    onChatClick = { id -> outerNavController.navigate(Routes.chatRoom(id)) },
                     onBookingClick = { id -> outerNavController.navigate(Routes.bookingDetail(id)) },
                     authViewModel = authViewModel,
                 )

@@ -32,7 +32,9 @@ import com.jepretaja.app.data.model.BookingModel
 import com.jepretaja.app.data.model.CreatorModel
 import com.jepretaja.app.data.model.ExplorePostModel
 import com.jepretaja.app.ui.components.BadgedIconButton
+import com.jepretaja.app.ui.components.AppTopBar
 import com.jepretaja.app.ui.components.CreatorCard
+import com.jepretaja.app.ui.components.GradientHeroCard
 import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.components.SectionHeader
 import com.jepretaja.app.ui.components.SkeletonBox
@@ -125,15 +127,8 @@ fun HomeScreen(
         // membuat warna latar header berubah begitu konten mulai bergulir.
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        namaHeader,
-                        style = MaterialTheme.typography.titleLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
+            AppTopBar(
+                title = namaHeader,
                 actions = {
                     BadgedIconButton(
                         icon = Icons.AutoMirrored.Filled.Chat,
@@ -152,12 +147,6 @@ fun HomeScreen(
                         onClick = onNotifications,
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppColors.Background,
-                    scrolledContainerColor = AppColors.Surface,
-                    titleContentColor = AppColors.TextPrimary,
-                    actionIconContentColor = AppColors.TextPrimary,
-                ),
                 scrollBehavior = scrollBehavior,
             )
         },
@@ -199,6 +188,69 @@ fun HomeScreen(
                         color = AppColors.TextSecondary,
                         style = MaterialTheme.typography.bodyMedium,
                     )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+            GradientHeroCard(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = PadTepi),
+                colors = listOf(AppColors.PrimaryDark, AppColors.Primary),
+            ) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "Momen penting, creator yang tepat.",
+                            color = AppColors.OnPrimary,
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Jelajahi portofolio nyata dan temukan fotografer yang sesuai gaya kamu.",
+                            color = AppColors.OnPrimary.copy(alpha = 0.78f),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    Box(
+                        Modifier.size(46.dp).clip(RoundedCornerShape(16.dp))
+                            .background(Color.White.copy(alpha = 0.14f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = AppColors.OnPrimary,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(18.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        onClick = onSeeExplore,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.OnPrimary,
+                            contentColor = AppColors.PrimaryDark,
+                        ),
+                        shape = RoundedCornerShape(percent = 50),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Default.Explore, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Jelajah karya")
+                    }
+                    OutlinedButton(
+                        onClick = onSearch,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.OnPrimary),
+                        border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
+                            brush = Brush.linearGradient(listOf(Color.White.copy(alpha = 0.65f), Color.White.copy(alpha = 0.65f)))
+                        ),
+                        shape = RoundedCornerShape(percent = 50),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Cari creator")
+                    }
                 }
             }
 

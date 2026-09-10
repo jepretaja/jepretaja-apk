@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhotoCamera
@@ -24,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -39,6 +41,8 @@ import com.jepretaja.app.data.work.UploadQueue
 import com.jepretaja.app.ui.components.AppAvatar
 import com.jepretaja.app.ui.components.BigPrimaryButton
 import com.jepretaja.app.ui.components.EmptyState
+import com.jepretaja.app.ui.components.GradientHeroCard
+import com.jepretaja.app.ui.components.SectionHeader
 import com.jepretaja.app.ui.components.VideoPlayer
 import com.jepretaja.app.ui.components.premiumShadow
 import com.jepretaja.app.ui.screens.camera.CameraCaptureScreen
@@ -190,11 +194,9 @@ fun CreatorUploadScreen(
     }
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }, topBar = {
-        TopAppBar(
-            title = { Text("Upload Konten", style = MaterialTheme.typography.headlineSmall) },
-            navigationIcon = {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali") }
-            },
+        com.jepretaja.app.ui.components.AppTopBar(
+            title = "Upload Konten",
+            onBack = onBack,
             actions = {
                 TextButton(onClick = { viewModel.refreshDrafts(); bukaDraft = true }) {
                     Text(if (drafts.isEmpty()) "Draft" else "Draft (${drafts.size})")
@@ -218,10 +220,56 @@ fun CreatorUploadScreen(
 
         Column(Modifier.padding(padding).padding(20.dp).verticalScroll(rememberScrollState())) {
 
+            GradientHeroCard(
+                modifier = Modifier.fillMaxWidth(),
+                colors = listOf(AppColors.PrimaryDark, AppColors.Primary),
+            ) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "Publikasikan karya terbaikmu",
+                            color = AppColors.OnPrimary,
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Atur media, cerita, dan detail booking dalam satu alur yang rapi.",
+                            color = AppColors.OnPrimary.copy(alpha = 0.78f),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    Box(
+                        Modifier.size(46.dp).clip(RoundedCornerShape(16.dp))
+                            .background(AppColors.OnPrimary.copy(alpha = 0.14f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Default.CloudUpload,
+                            contentDescription = null,
+                            tint = AppColors.OnPrimary,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    UploadStatusPill(
+                        label = if (mediaUris.isEmpty()) "Belum ada media" else "Media siap",
+                        active = mediaUris.isNotEmpty(),
+                    )
+                    UploadStatusPill(label = target, active = true)
+                    if (jadwalMillis != null) UploadStatusPill(label = "Terjadwal", active = true)
+                }
+            }
+
             if (antrean.isNotEmpty()) {
                 AntreanSection(antrean, onBatal = { UploadQueue.batal(context, it) })
                 Spacer(Modifier.height(18.dp))
             }
+
+            Spacer(Modifier.height(22.dp))
+            SectionHeader("Media", subtitle = "Pilih foto, video, atau ambil langsung dari kamera")
+            Spacer(Modifier.height(10.dp))
 
             Box(
                 Modifier.fillMaxWidth().aspectRatio(16f / 9f)
@@ -316,6 +364,10 @@ fun CreatorUploadScreen(
                     Text(it, style = MaterialTheme.typography.bodySmall, color = AppColors.Danger)
                 }
             }
+
+            Spacer(Modifier.height(24.dp))
+            SectionHeader("Detail karya", subtitle = "Bantu calon pelanggan memahami karya ini")
+            Spacer(Modifier.height(10.dp))
 
             if (isVideo && (infoMedia.durationSeconds ?: 0L) > 0) {
                 val durasiMs = (infoMedia.durationSeconds ?: 0L) * 1000f
@@ -664,6 +716,24 @@ private fun AntreanSection(antrean: List<com.jepretaja.app.data.work.AntreanUngg
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun UploadStatusPill(label: String, active: Boolean) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(percent = 50))
+            .background(Color.White.copy(alpha = if (active) 0.18f else 0.10f))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(6.dp).clip(RoundedCornerShape(percent = 50))
+                .background(if (active) AppColors.OnPrimary else AppColors.OnPrimary.copy(alpha = 0.55f)),
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(label, color = AppColors.OnPrimary, style = MaterialTheme.typography.labelSmall)
     }
 }
 

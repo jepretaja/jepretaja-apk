@@ -38,9 +38,7 @@ fun PackageDetailScreen(
     val notFound by viewModel.notFound.collectAsState()
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text("Detail Paket", style = MaterialTheme.typography.headlineSmall) }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali") }
-        })
+        com.jepretaja.app.ui.components.AppTopBar(title = "Detail Paket", onBack = onBack)
     }) { padding ->
         when {
             loading -> Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
