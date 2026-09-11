@@ -79,6 +79,7 @@ import com.jepretaja.app.ui.state.AuthViewModel
 fun JepretAjaNavGraph(
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
+    notificationRoute: String? = null,
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
 
@@ -116,7 +117,8 @@ fun JepretAjaNavGraph(
     ) {
         composable(Routes.SPLASH) {
             SplashScreen(authViewModel = authViewModel) { target ->
-                navController.navigate(target) { popUpTo(Routes.SPLASH) { inclusive = true } }
+                val tujuan = if (target == Routes.HOME && notificationRoute != null) notificationRoute else target
+                navController.navigate(tujuan) { popUpTo(Routes.SPLASH) { inclusive = true } }
             }
         }
         composable(Routes.ONBOARDING) {

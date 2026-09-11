@@ -11,6 +11,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.jepretaja.app.MainActivity
 import com.jepretaja.app.R
+import com.jepretaja.app.core.navigation.Routes
 
 /**
  * Didaftarkan di AndroidManifest tapi sebelumnya belum ada implementasinya —
@@ -34,6 +35,7 @@ class JepretAjaMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(message)
         val title = message.notification?.title ?: message.data["title"] ?: "JepretAja"
         val body = message.notification?.body ?: message.data["body"] ?: return
+        val route = routeFor(message.data["type"], message.data["referenceId"])
 
         val manager = getSystemService(NotificationManager::class.java) ?: return
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
@@ -44,6 +46,7 @@ class JepretAjaMessagingService : FirebaseMessagingService() {
 
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            route?.let { putExtra(EXTRA_ROUTE, it) }
         }
         val pendingIntent = PendingIntent.getActivity(
             this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
@@ -60,7 +63,18 @@ class JepretAjaMessagingService : FirebaseMessagingService() {
         manager.notify(System.currentTimeMillis().toInt(), notification)
     }
 
+    private fun routeFor(type: String?, referenceId: String?): String? {
+        if (referenceId.isNullOrBlank()) return null
+        return when (type) {
+            "chat", "message" -> Routes.chatRoom(referenceId)
+            "payment", "booking", "refund", "dispute" -> Routes.bookingDetail(referenceId)
+            "post", "comment", "like" -> Routes.exploreDetail(referenceId)
+            else -> null
+        }
+    }
+
     private companion object {
         const val CHANNEL_ID = "jepretaja_default"
+        const val EXTRA_ROUTE = "notification_route"
     }
 }

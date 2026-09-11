@@ -24,6 +24,7 @@ import com.jepretaja.app.core.util.ConnectivityObserver
 import com.jepretaja.app.ui.components.OfflineBanner
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import com.jepretaja.app.core.navigation.Routes
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -41,6 +42,7 @@ class MainActivity : ComponentActivity() {
         // onboarding, dst), bukan cuma splash sesaat.
         setTheme(R.style.Theme_JepretAja)
         enableEdgeToEdge()
+        val notificationRoute = intent.getStringExtra("notification_route")
         setContent {
             JepretAjaTheme {
                 val online by connectivityObserver.isOnline.collectAsState(initial = true)
@@ -69,7 +71,10 @@ class MainActivity : ComponentActivity() {
                     // berlaku di semua layar sekaligus, bukan ditambahkan satu
                     // per satu di tiap halaman.
                     OfflineBanner(isOnline = online, modifier = Modifier.statusBarsPadding())
-                    JepretAjaNavGraph(modifier = Modifier.weight(1f))
+                    JepretAjaNavGraph(
+                        modifier = Modifier.weight(1f),
+                        notificationRoute = notificationRoute,
+                    )
                 }
             }
         }
