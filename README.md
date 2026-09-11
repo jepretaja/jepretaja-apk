@@ -1,11 +1,8 @@
 # JepretAja — Android (Kotlin + Jetpack Compose)
 
-Rewrite native dari versi Flutter (lihat `jepretaja_app/` untuk versi
-sebelumnya) — **backend (Cloud Functions, Firestore Rules, Storage Rules,
-integrasi Midtrans, video-processor) SAMA PERSIS, tidak ada yang berubah**.
-Project ini hanya menulis ulang client Android-nya dengan Kotlin +
-Jetpack Compose, memanggil collection Firestore & Cloud Function callable
-yang identik.
+Rewrite native dari versi Flutter dengan backend produksi di Vercel dan Firebase.
+Project ini memakai Kotlin + Jetpack Compose, Firestore untuk data realtime,
+endpoint Vercel `POST /api/app` untuk aksi server, dan Cloudinary untuk media.
 
 ## Status Android Saat Ini
 
@@ -15,9 +12,8 @@ yang identik.
 - Semua model data (User, Creator, ExplorePost, Portfolio, Package, Booking
   dengan state machine 13-status, Chat, Wallet, Payment, Review, Notification)
 - Semua repository (Auth, Creator, Explore, Booking, Payment, Availability,
-  Chat, Wallet) — memanggil collection Firestore & Cloud Function callable
-  yang **identik** dengan backend yang sudah ada, termasuk aturan yang sama
-  (booking tidak pernah ditulis langsung, hanya lewat callable, dst)
+  Chat, Wallet) — memakai Firestore untuk data dan `ApiClient` ke endpoint
+  Vercel untuk aksi server yang memerlukan otorisasi.
 - Google Sign-In dengan `ActivityResultLauncher` yang benar
 - Layar autentikasi, Home, Explore, Search, Nearby, Creator Profile, Package
   Detail, Booking, Payment, Chat, Notifications, Profile, Favorites, Reviews,
@@ -25,8 +21,8 @@ yang identik.
 - NavGraph merangkai alur customer dan creator, termasuk upload karya,
   pengelolaan paket/portfolio/booking, wallet, withdrawal, ketersediaan, dan
   pengaturan.
-- Build debug otomatis di GitHub Actions dan APK tersedia melalui GitHub
-  Releases.
+- Build debug tersedia untuk pengujian; build release harus memakai keystore
+  pribadi dan konfigurasi produksi yang disimpan sebagai secret.
 
 ### Pekerjaan yang masih perlu diuji atau disempurnakan
 
@@ -88,12 +84,11 @@ Cari `SHA1` di output (untuk variant debug), copy, lalu di Firebase Console
 → Project Settings → Your apps → Android app → **Add fingerprint** → paste.
 Tanpa ini, Google Sign-In akan gagal dengan error `DEVELOPER_ERROR`.
 
-## Backend (tidak berubah)
+## Backend produksi
 
-Semua dokumentasi backend (`SETUP.md`, `SECURITY.md`, `PAYMENT.md`, dst)
-dari project Flutter **tetap berlaku 100%** untuk project ini — cukup lihat
-`jepretaja_app/docs/` dan `jepretaja_app/backend/`. Tidak ada yang perlu
-di-deploy ulang.
+Backend web berada di `jepretaja_website/`: endpoint `POST /api/app` berjalan
+di Vercel, sementara Authentication, Firestore, App Check, dan FCM berjalan
+di Firebase. Aturan Firestore harus dideploy dari project website.
 
 ## GitHub, Vercel, dan APK
 
@@ -106,8 +101,9 @@ menjalankan file APK. Pola deploy yang benar:
   - `GOOGLE_SERVICES_JSON`: isi file `app/google-services.json` dalam Base64.
   - `API_BASE_URL`: domain Vercel, misalnya `https://api.jepretaja.vercel.app`.
   - `CLOUDINARY_CLOUD_NAME` dan `CLOUDINARY_UPLOAD_PRESET` bila fitur upload dipakai.
-4. Push ke branch `main`. Workflow `Build APK` akan membuat APK di GitHub
-  Actions → run terbaru → `Artifacts` → `jepretaja-debug-apk`.
+4. Push ke branch `main`. Workflow debug dapat membuat APK untuk pengujian.
+  Untuk Play Store, workflow release harus memakai keystore dan menghasilkan
+  AAB signed, bukan debug APK.
 
 APK debug dapat dipasang langsung pada perangkat Android setelah mengizinkan
 instalasi dari sumber tidak dikenal. Untuk Google Play, gunakan APK/AAB rilis

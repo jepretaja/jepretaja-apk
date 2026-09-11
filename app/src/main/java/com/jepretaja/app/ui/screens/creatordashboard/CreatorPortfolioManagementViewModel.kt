@@ -6,12 +6,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jepretaja.app.data.model.PortfolioModel
 import com.jepretaja.app.data.model.PortfolioStatus
-import com.jepretaja.app.core.util.MediaNormalizer
 import com.jepretaja.app.data.repository.CreatorRepository
-import com.jepretaja.app.services.StorageService
-import com.jepretaja.app.data.work.UploadNotifier
+import com.jepretaja.app.core.util.MediaUnggahan
+import com.jepretaja.app.data.work.PortfolioUploadWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,7 +37,6 @@ data class ProgresUnggah(
 @HiltViewModel
 class CreatorPortfolioManagementViewModel @Inject constructor(
     val repository: CreatorRepository,
-    private val storageService: StorageService,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -63,67 +66,22 @@ class CreatorPortfolioManagementViewModel @Inject constructor(
     fun unggahAlbum(creatorId: String, uris: List<Uri>, urutanBerikutnya: Long) {
         if (uris.isEmpty()) return
         viewModelScope.launch {
-            val uploadId = UUID.randomUUID().toString()
-            UploadNotifier.started(context, uploadId)
-            _progres.value = ProgresUnggah(total = uris.size)
-            val url = mutableListOf<String>()
-            var gagal = 0
-            var adaVideo = false
-
-            uris.forEach { uri ->
-                UploadNotifier.processing(context, uploadId)
-                val video = apakahVideo(uri)
-                val hasil = runCatching {
-                    val normalized = if (video) {
-                        runCatching { MediaNormalizer.reframeVideo(context, uri) }.getOrElse { uri }
-                    } else {
-                        MediaNormalizer.normalizeImage(context, uri)
-                    }
-                    storageService.uploadPortfolioMedia(
-                        creatorId = creatorId,
-                        uri = normalized,
-                        extension = if (video) "mp4" else "jpg",
-                        resourceType = if (video) "video" else "image",
-                    )
-                }
-                hasil.onSuccess {
-                    url += it
-                    if (video) adaVideo = true
-                }.onFailure { gagal += 1 }
-                _progres.value = _progres.value.copy(selesai = url.size, gagal = gagal)
-                UploadNotifier.uploading(context, uploadId, url.size.toDouble() / uris.size.toDouble())
-            }
-
-            if (url.isEmpty()) {
-                _progres.value = ProgresUnggah()
-                _pesan.value = "Semua berkas gagal diunggah. Periksa koneksimu lalu coba lagi."
-                UploadNotifier.failure(context, uploadId, "Semua media gagal diproses.")
+            val salinan = runCatching {
+                uris.map { MediaUnggahan.salin(context, it, if (apakahVideo(it)) "mp4" else "jpg") }
+            }.getOrElse {
+                _pesan.value = "Media tidak bisa disiapkan. Pilih ulang dari galeri."
                 return@launch
             }
-
-            val simpan = runCatching {
-                repository.addPortfolioAlbum(
-                    creatorId = creatorId,
-                    media = url,
-                    title = "",
-                    category = "",
-                    type = if (adaVideo) "video" else "image",
-                    // Sampul video belum bisa dibuat di perangkat, jadi
-                    // dikosongkan dan grid memakai penanda video sebagai
-                    // gantinya — lebih jujur daripada memajang kotak kosong.
-                    thumbnailUrl = null,
-                    status = PortfolioStatus.DRAFT,
-                    order = urutanBerikutnya,
-                )
-            }
-            _progres.value = ProgresUnggah()
-            if (simpan.isSuccess) UploadNotifier.success(context, uploadId)
-            else UploadNotifier.failure(context, uploadId, "Media terunggah tetapi portfolio gagal disimpan.")
-            _pesan.value = when {
-                simpan.isFailure -> "Media terunggah tapi albumnya gagal disimpan."
-                gagal > 0 -> "Album dibuat sebagai draft. $gagal berkas gagal diunggah."
-                else -> "Album dibuat sebagai draft. Ajukan review kalau sudah siap."
-            }
+            val request = OneTimeWorkRequestBuilder<PortfolioUploadWorker>()
+                .setInputData(PortfolioUploadWorker.data(creatorId, salinan.map { it.toString() }, urutanBerikutnya))
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .setBackoffCriteria(androidx.work.BackoffPolicy.EXPONENTIAL, 30, java.util.concurrent.TimeUnit.SECONDS)
+                .addTag(PortfolioUploadWorker.TAG)
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "portfolio_${request.id}", ExistingWorkPolicy.KEEP, request,
+            )
+            _pesan.value = "Portfolio masuk antrean. Kamu boleh menutup layar ini."
         }
     }
 

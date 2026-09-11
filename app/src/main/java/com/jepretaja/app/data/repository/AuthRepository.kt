@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.jepretaja.app.core.util.FirestorePaths
 import com.jepretaja.app.data.model.UserModel
 import kotlinx.coroutines.channels.awaitClose
@@ -23,6 +24,7 @@ class AuthRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore,
     private val exploreRepository: ExploreRepository,
+    private val messaging: FirebaseMessaging,
 ) {
     val currentUser: FirebaseUser? get() = auth.currentUser
 
@@ -40,39 +42,47 @@ class AuthRepository @Inject constructor(
 
     suspend fun login(email: String, password: String) {
         auth.signInWithEmailAndPassword(email, password).await()
+        syncFcmToken()
     }
 
     suspend fun registerCustomer(name: String, email: String, password: String, phone: String?) {
         val cred = auth.createUserWithEmailAndPassword(email, password).await()
         val uid = cred.user!!.uid
-        db.collection(FirestorePaths.USERS).document(uid).set(
-            mapOf(
-                "userId" to uid, "name" to name, "email" to email, "phone" to phone,
-                "role" to "customer", "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
-            )
-        ).await()
-        cred.user?.sendEmailVerification()?.await()
+        try {
+            db.collection(FirestorePaths.USERS).document(uid).set(
+                mapOf(
+                    "userId" to uid, "name" to name, "email" to email, "phone" to phone,
+                    "role" to "customer", "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
+                )
+            ).await()
+            cred.user?.sendEmailVerification()?.await()
+            syncFcmToken()
+        } catch (error: Exception) {
+            runCatching { cred.user?.delete()?.await() }
+            throw error
+        }
     }
 
     suspend fun registerCreator(name: String, email: String, password: String, city: String, phone: String?) {
         val cred = auth.createUserWithEmailAndPassword(email, password).await()
         val uid = cred.user!!.uid
-        val batch = db.batch()
-        batch.set(
-            db.collection(FirestorePaths.USERS).document(uid),
-            mapOf(
-                "userId" to uid, "name" to name, "email" to email, "phone" to phone,
-                "role" to "creator", "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
+        try {
+            val batch = db.batch()
+            batch.set(
+                db.collection(FirestorePaths.USERS).document(uid),
+                mapOf(
+                    "userId" to uid, "name" to name, "email" to email, "phone" to phone,
+                    "role" to "creator", "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
+                )
             )
-        )
-        batch.set(
-            db.collection(FirestorePaths.CREATORS).document(uid),
-            mapOf(
-                "userId" to uid, "displayName" to name, "city" to city, "categories" to emptyList<String>(),
-                "rating" to 0.0, "reviewCount" to 0, "followerCount" to 0, "verified" to false,
-                "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
+            batch.set(
+                db.collection(FirestorePaths.CREATORS).document(uid),
+                mapOf(
+                    "userId" to uid, "displayName" to name, "city" to city, "categories" to emptyList<String>(),
+                    "rating" to 0.0, "reviewCount" to 0, "followerCount" to 0, "verified" to false,
+                    "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
+                )
             )
-        )
         // CATATAN: dokumen wallets/{uid} SENGAJA tidak dibuat di sini.
         // firestore.rules menutup total penulisan ke koleksi `wallets`
         // (allow write: if false) karena isinya saldo uang. Karena batch
@@ -84,8 +94,13 @@ class AuthRepository @Inject constructor(
         // Wallet dibuat server saat dana pertama dilepas (releaseEscrow pakai
         // set + merge), dan layar wallet menampilkan saldo 0 selama dokumennya
         // belum ada.
-        batch.commit().await()
-        cred.user?.sendEmailVerification()?.await()
+            batch.commit().await()
+            cred.user?.sendEmailVerification()?.await()
+            syncFcmToken()
+        } catch (error: Exception) {
+            runCatching { cred.user?.delete()?.await() }
+            throw error
+        }
     }
 
   /** Google Sign-In (section 8). Dokumen users/{uid} dibuat otomatis
@@ -104,6 +119,16 @@ class AuthRepository @Inject constructor(
                   "createdAt" to FieldValue.serverTimestamp(),
               )
           ).await()
+      }
+      syncFcmToken()
+  }
+
+  /** Token disinkronkan setelah sesi siap, bukan hanya saat Firebase merotasi token. */
+  private suspend fun syncFcmToken() {
+      val uid = currentUser?.uid ?: return
+      runCatching {
+          val token = messaging.token.await()
+          db.collection(FirestorePaths.USERS).document(uid).update("fcmToken", token).await()
       }
   }
 

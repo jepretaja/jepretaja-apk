@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -74,7 +75,6 @@ private const val MAKS_FOTO = 10
 @Composable
 fun CreatorUploadScreen(
     onBack: () -> Unit,
-    onUploaded: () -> Unit,
     authViewModel: AuthViewModel,
     viewModel: CreatorUploadViewModel = hiltViewModel(),
 ) {
@@ -211,6 +211,7 @@ fun CreatorUploadScreen(
                     packagePrice = paketDipilih?.price,
                 ),
                 sampulPratinjau,
+                notify = false,
             )
             if (draftOtomatisId == null) draftOtomatisId = viewModel.drafts.value.firstOrNull()?.id
         }
@@ -234,13 +235,15 @@ fun CreatorUploadScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         snackbarHost = { SnackbarHost(snackbarHostState) }, topBar = {
         com.jepretaja.app.ui.components.AppTopBar(
-            title = "Buat Postingan",
+            title = "Creator Studio",
             onBack = onBack,
             scrollBehavior = scrollBehavior,
             actions = {
-                TextButton(onClick = { viewModel.refreshDrafts(); bukaDraft = true }) {
-                    Text(if (drafts.isEmpty()) "Draft" else "Draft (${drafts.size})")
-                }
+                AssistChip(
+                    onClick = { viewModel.refreshDrafts(); bukaDraft = true },
+                    label = { Text(if (drafts.isEmpty()) "Draft" else "Draft ${drafts.size}") },
+                    leadingIcon = { Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                )
             },
         )
     }, bottomBar = {
@@ -275,11 +278,24 @@ fun CreatorUploadScreen(
                     shape = RoundedCornerShape(percent = 50),
                 ) { Text("Simpan Draft") }
                 Button(
-                    onClick = { sedangMenyiapkan = true },
+                    onClick = {
+                        when {
+                            mediaUris.isEmpty() -> scope.launch { snackbarHostState.showSnackbar("Pilih minimal satu media.") }
+                            alasanTolak != null -> scope.launch { snackbarHostState.showSnackbar(alasanTolak!!) }
+                            caption.isBlank() -> scope.launch { snackbarHostState.showSnackbar("Caption wajib diisi sebelum dipublikasikan.") }
+                            else -> sedangMenyiapkan = true
+                        }
+                    },
                     enabled = mediaUris.isNotEmpty() && alasanTolak == null && !sedangMenyiapkan,
                     modifier = Modifier.weight(1.2f).height(50.dp),
                     shape = RoundedCornerShape(percent = 50),
-                ) { Text(if (jadwalMillis != null) "Jadwalkan" else "Publikasikan") }
+                ) {
+                    if (sedangMenyiapkan) {
+                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                    } else {
+                        Text(if (jadwalMillis != null) "Jadwalkan" else "Publikasikan")
+                    }
+                }
             }
         }
     }) { padding ->

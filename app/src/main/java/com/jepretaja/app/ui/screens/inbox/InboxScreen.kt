@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -69,7 +70,9 @@ fun InboxScreen(
     val scrollBehavior = rememberAppTopBarScrollBehavior()
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = AppColors.Background,
         topBar = { AppTopBar(title = "Kotak Masuk", scrollBehavior = scrollBehavior) },
     ) { padding ->
@@ -190,7 +193,13 @@ fun InboxScreen(
                         }
                     }) { item ->
                         when (item) {
-                            is InboxItem.Chat -> ChatInboxRow(item, onClick = { onChatClick(item.value.chatId) })
+                            is InboxItem.Chat -> {
+                                ChatInboxRow(item, onClick = { onChatClick(item.value.chatId) })
+                                HorizontalDivider(
+                                    color = AppColors.Border,
+                                    modifier = Modifier.padding(start = 80.dp),
+                                )
+                            }
                             is InboxItem.Booking -> BookingInboxRow(item.value, onClick = { onBookingClick(item.value.bookingId) })
                             is InboxItem.Notification -> NotificationInboxRow(item.value, onClick = { notificationViewModel.markRead(item.value.notificationId) })
                         }
@@ -204,19 +213,50 @@ fun InboxScreen(
 @Composable
 private fun ChatInboxRow(item: InboxItem.Chat, onClick: () -> Unit) {
     val chat = item.value
-    PremiumCard(modifier = Modifier.fillMaxWidth(), elevation = if (item.unread > 0) 5.dp else 2.dp, onClick = onClick) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            AppAvatar(url = chat.otherPartyPhotoUrl, name = chat.otherPartyName, size = 48.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(chat.otherPartyName.ifBlank { "Percakapan" }, style = MaterialTheme.typography.titleSmall, fontWeight = if (item.unread > 0) FontWeight.W700 else FontWeight.W500, color = AppColors.TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(3.dp))
-                Text(chat.lastMessage.ifBlank { "Belum ada pesan" }, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            if (item.unread > 0) {
-                Box(Modifier.size(22.dp).clip(CircleShape).background(AppColors.Primary), contentAlignment = Alignment.Center) {
-                    Text(if (item.unread > 9) "9+" else item.unread.toString(), style = MaterialTheme.typography.labelSmall, color = AppColors.OnPrimary)
-                }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AppAvatar(url = chat.otherPartyPhotoUrl, name = chat.otherPartyName, size = 52.dp)
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                chat.otherPartyName.ifBlank { "Percakapan" },
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = if (item.unread > 0) FontWeight.W700 else FontWeight.W600,
+                color = AppColors.TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                chat.lastMessage.ifBlank { "Belum ada pesan" },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (item.unread > 0) AppColors.TextPrimary else AppColors.TextSecondary,
+                fontWeight = if (item.unread > 0) FontWeight.W600 else FontWeight.Normal,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (item.unread > 0) {
+            Spacer(Modifier.width(8.dp))
+            Box(
+                Modifier
+                    .clip(CircleShape)
+                    .background(AppColors.Primary)
+                    .defaultMinSize(minWidth = 22.dp, minHeight = 22.dp)
+                    .padding(horizontal = 6.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    if (item.unread > 99) "99+" else item.unread.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.W700,
+                    color = AppColors.OnPrimary,
+                )
             }
         }
     }

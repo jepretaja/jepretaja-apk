@@ -183,6 +183,21 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun resetPassword(onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            val email = _uiState.value.profile?.email ?: authRepository.currentUser?.email
+            if (email.isNullOrBlank()) {
+                onResult("Email akun belum tersedia.")
+                return@launch
+            }
+            val hasil = runCatching { authRepository.resetPassword(email) }
+            onResult(
+                if (hasil.isSuccess) "Tautan ubah password dikirim ke $email."
+                else "Gagal mengirim tautan ubah password. Coba lagi nanti.",
+            )
+        }
+    }
+
     /**
      * Dipanggil setelah pengguna menekan tautan di emailnya. Tanpa langkah ini
      * status tersimpan di cache perangkat dan tidak pernah berubah sendiri.

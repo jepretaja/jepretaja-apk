@@ -301,7 +301,7 @@ class CreatorRepository @Inject constructor(private val db: FirebaseFirestore) {
                 "category" to category,
                 "type" to type,
                 "thumbnailUrl" to thumbnailUrl,
-                "status" to PortfolioStatus.DISETUJUI,
+                "status" to status,
                 "order" to order,
                 "createdAt" to FieldValue.serverTimestamp(),
             )

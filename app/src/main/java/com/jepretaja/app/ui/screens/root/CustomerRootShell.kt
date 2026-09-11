@@ -183,7 +183,6 @@ fun CustomerRootShell(
             onDismiss = { showUploadSheet = false },
             onUploadMedia = { showUploadSheet = false; outerNavController.navigate(Routes.CREATOR_UPLOAD) },
             onNewPackage = { showUploadSheet = false; outerNavController.navigate(Routes.CREATOR_PACKAGE_MANAGEMENT) },
-            onManagePortfolio = { showUploadSheet = false; outerNavController.navigate(Routes.CREATOR_PORTFOLIO_MANAGEMENT) },
         )
     }
 }

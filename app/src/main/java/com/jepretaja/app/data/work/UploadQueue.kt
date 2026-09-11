@@ -62,6 +62,13 @@ object UploadQueue {
 
     fun batal(context: Context, id: UUID) {
         WorkManager.getInstance(context).cancelWorkById(id)
+        clearPayload(context, id)
+    }
+
+    fun clearPayload(context: Context, id: UUID) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .remove(id.toString())
+            .apply()
     }
 
     suspend fun retry(context: Context, id: UUID): UUID? {

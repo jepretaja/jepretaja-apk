@@ -189,7 +189,7 @@ fun JepretAjaNavGraph(
             )
         }
         composable(Routes.CREATOR_UPLOAD) {
-            CreatorUploadScreen(onBack = { navController.popBackStack() }, onUploaded = { navController.popBackStack() }, authViewModel = authViewModel)
+            CreatorUploadScreen(onBack = { navController.popBackStack() }, authViewModel = authViewModel)
         }
         composable(Routes.CREATOR_PORTFOLIO_MANAGEMENT) {
             CreatorPortfolioManagementScreen(onBack = { navController.popBackStack() }, authViewModel = authViewModel)

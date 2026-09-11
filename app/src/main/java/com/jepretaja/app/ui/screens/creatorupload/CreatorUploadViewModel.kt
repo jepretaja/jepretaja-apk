@@ -190,6 +190,7 @@ class CreatorUploadViewModel @Inject constructor(
         isVideo: Boolean,
         pengaturan: PengaturanPost = PengaturanPost(),
         coverUri: Uri? = null,
+        notify: Boolean = true,
     ) {
         prefs.simpanDraft(
             DraftTersimpan(
@@ -214,7 +215,7 @@ class CreatorUploadViewModel @Inject constructor(
             )
         )
         _drafts.value = prefs.drafts
-        _message.value = "Tersimpan ke draft."
+        if (notify) _message.value = "Tersimpan ke draft."
     }
 
     fun hapusDraft(id: String) {

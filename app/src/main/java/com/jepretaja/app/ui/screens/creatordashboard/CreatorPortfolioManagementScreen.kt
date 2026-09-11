@@ -57,6 +57,7 @@ import com.jepretaja.app.data.model.PortfolioStatus
 import com.jepretaja.app.ui.components.AppTopBar
 import com.jepretaja.app.ui.components.EmptyState
 import com.jepretaja.app.ui.components.premiumShadow
+import com.jepretaja.app.ui.components.VideoPlayer
 import com.jepretaja.app.ui.components.rememberAppTopBarScrollBehavior
 import com.jepretaja.app.ui.state.AuthViewModel
 
@@ -538,21 +539,12 @@ private fun PratinjauLayarPenuh(item: PortfolioModel, onTutup: () -> Unit) {
                 Column(
                     Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Icon(
-                        Icons.Default.PlayCircle, contentDescription = null,
-                        tint = Color.White, modifier = Modifier.size(64.dp),
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    // Jujur soal batasnya daripada memutar apa pun: pemutar
-                    // video di layar kelola belum ada, dan tombol putar yang
-                    // tidak memutar lebih buruk daripada keterangan ini.
-                    Text(
-                        "Pratinjau video belum tersedia di layar kelola.\nVideo tetap tayang normal di profil publik.",
-                        color = Color.White.copy(alpha = 0.8f),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(horizontal = 32.dp),
+                    VideoPlayer(
+                        url = media.getOrNull(indeks).orEmpty(),
+                        playWhenActive = false,
+                        muted = false,
+                        modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
                     )
                 }
             } else {

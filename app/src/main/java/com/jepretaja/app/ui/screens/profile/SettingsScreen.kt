@@ -87,6 +87,7 @@ fun SettingsScreen(
     var followSystemTheme by remember { mutableStateOf(true) }
     var animations by remember { mutableStateOf(true) }
     var showComingSoon by remember { mutableStateOf<String?>(null) }
+    var actionMessage by remember { mutableStateOf<String?>(null) }
     var showLogout by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -111,9 +112,9 @@ fun SettingsScreen(
 
             SettingsSection("Akun", Icons.Default.Person) {
                 SettingRow(Icons.Default.Person, "Edit profil", "Nama, email, nomor HP", onEditProfile)
-                SettingRow(Icons.Default.Lock, "Ubah password", "Kelola kata sandi akun", { showComingSoon = "Ubah password" })
+                SettingRow(Icons.Default.Lock, "Ubah password", "Kirim tautan ubah password ke email", { authViewModel.resetPassword { actionMessage = it } })
                 SettingRow(Icons.Default.Security, "PIN keamanan", "Tambahkan lapisan keamanan", { showComingSoon = "PIN keamanan" })
-                SettingRow(Icons.Default.VerifiedUser, "Verifikasi akun", "Status verifikasi identitas", { showComingSoon = "Verifikasi akun" })
+                SettingRow(Icons.Default.VerifiedUser, "Verifikasi email", "Kirim ulang email verifikasi akun", { authViewModel.resendVerificationEmail { actionMessage = it } })
                 SettingRow(Icons.Default.Devices, "Perangkat yang login", "Tinjau sesi aktif", { showComingSoon = "Perangkat yang login" })
                 SettingRow(Icons.Default.Logout, "Keluar dari semua perangkat", "Akhiri sesi selain perangkat ini", { showComingSoon = "Keluar dari semua perangkat" })
             }
@@ -188,6 +189,14 @@ fun SettingsScreen(
             title = { Text(title) },
             text = { Text("Pengaturan ini sudah disiapkan di pusat Pengaturan dan akan tersambung ke layanan akun saat endpoint terkait diaktifkan.") },
             confirmButton = { TextButton(onClick = { showComingSoon = null }) { Text("Mengerti") } },
+        )
+    }
+    actionMessage?.let { message ->
+        AlertDialog(
+            onDismissRequest = { actionMessage = null },
+            title = { Text("JepretAja") },
+            text = { Text(message) },
+            confirmButton = { TextButton(onClick = { actionMessage = null }) { Text("Mengerti") } },
         )
     }
     if (showLogout) {

@@ -212,7 +212,17 @@ class PaymentViewModel @Inject constructor(
             AnalyticsService.logPaymentStarted(bookingId)
             try {
                 val hasil = paymentRepository.createPaymentOrder(bookingId)
-                _snapUrl.value = hasil["redirectUrl"] as? String
+                val redirectUrl = hasil["redirectUrl"] as? String
+                _snapUrl.value = redirectUrl
+                // Backend production memakai Midtrans Snap. Jangan membuat
+                // instruksi transfer manual dari field yang memang tidak
+                // dikembalikan Midtrans, karena itu menampilkan rekening/kode
+                // unik palsu di layar pembayaran.
+                if (!redirectUrl.isNullOrBlank() || hasil["snapToken"] != null) {
+                    _transferApi.value = null
+                    _transfer.value = null
+                    return@launch
+                }
                 val info = ManualTransferInfo(
                     paymentId = hasil["paymentId"] as? String ?: "",
                     amount = angka(hasil["amount"]),

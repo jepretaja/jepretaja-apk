@@ -134,6 +134,7 @@ class UploadWorker(
             // gangguan jaringan tidak punya lagi berkas untuk diunggah.
             MediaUnggahan.bersihkan(applicationContext, uris + listOfNotNull(coverUri))
             UploadNotifier.saving(applicationContext, id.toString())
+            UploadQueue.clearPayload(applicationContext, id)
             UploadNotifier.success(applicationContext, id.toString())
             Result.success(workDataOf(KEY_PROGRESS to 1f))
         } catch (e: SecurityException) {
@@ -143,6 +144,8 @@ class UploadWorker(
             UploadNotifier.failure(applicationContext, id.toString(), "Media tidak bisa dibaca lagi.")
             gagalkan(
                 caption, category, target, uris, isVideo,
+                location, commentPolicy, allowSave, allowLike, allowDownload, showLikeCount,
+                visibility, packageId, packageName, packagePrice, coverUri,
                 pesan = "Media tidak bisa dibaca lagi. Buka Draft, pilih ulang fotonya, lalu unggah lagi.",
             )
         } catch (e: IOException) {
@@ -171,12 +174,18 @@ class UploadWorker(
                     target,
                     uris,
                     isVideo,
+                    location, commentPolicy, allowSave, allowLike, allowDownload, showLikeCount,
+                    visibility, packageId, packageName, packagePrice, coverUri,
                     pesan = detail ?: "Upload gagal. Periksa koneksi dan konfigurasi penyimpanan.",
                 )
             }
         } catch (e: Exception) {
             UploadNotifier.failure(applicationContext, id.toString(), "Upload tidak dapat diproses.")
-            gagalkan(caption, category, target, uris, isVideo)
+            gagalkan(
+                caption, category, target, uris, isVideo,
+                location, commentPolicy, allowSave, allowLike, allowDownload, showLikeCount,
+                visibility, packageId, packageName, packagePrice, coverUri,
+            )
         }
     }
 
@@ -197,6 +206,17 @@ class UploadWorker(
         target: String,
         uris: List<String>,
         isVideo: Boolean,
+        location: String?,
+        commentPolicy: String,
+        allowSave: Boolean,
+        allowLike: Boolean,
+        allowDownload: Boolean,
+        showLikeCount: Boolean,
+        visibility: String,
+        packageId: String?,
+        packageName: String?,
+        packagePrice: Long?,
+        coverUri: String?,
         pesan: String = "Unggahan gagal. Isinya dikembalikan ke Draft.",
     ): Result {
         runCatching {
@@ -209,6 +229,17 @@ class UploadWorker(
                     mediaUris = uris,
                     isVideo = isVideo,
                     savedAt = System.currentTimeMillis(),
+                    location = location,
+                    commentPolicy = commentPolicy,
+                    allowSave = allowSave,
+                    allowLike = allowLike,
+                    allowDownload = allowDownload,
+                    showLikeCount = showLikeCount,
+                    visibility = visibility,
+                    packageId = packageId,
+                    packageName = packageName,
+                    packagePrice = packagePrice,
+                    coverUri = coverUri,
                 )
             )
         }
