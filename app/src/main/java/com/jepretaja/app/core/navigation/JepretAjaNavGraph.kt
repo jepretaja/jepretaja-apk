@@ -9,7 +9,12 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -90,9 +95,10 @@ fun JepretAjaNavGraph(
     val enterDuration = 320
     val exitDuration = 280
 
-    NavHost(
+    Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        NavHost(
         navController = navController,
-        modifier = modifier,
+        modifier = Modifier.fillMaxSize().widthIn(max = 600.dp),
         startDestination = Routes.SPLASH,
         enterTransition = {
             slideInHorizontally(
@@ -490,5 +496,6 @@ fun JepretAjaNavGraph(
         }
 
         // Semua route sudah dirangkai — jalur Konsumen & Creator lengkap.
+    }
     }
 }

@@ -33,7 +33,10 @@ fun EmptyState(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 40.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .widthIn(max = 460.dp)
+            .padding(horizontal = 32.dp, vertical = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(

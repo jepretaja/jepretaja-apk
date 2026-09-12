@@ -29,7 +29,10 @@ fun ErrorState(
     icon: ImageVector = Icons.Default.CloudOff,
 ) {
     Column(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 40.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .widthIn(max = 460.dp)
+            .padding(horizontal = 32.dp, vertical = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
