@@ -165,7 +165,12 @@ fun ProfileScreen(
     // jadi yang disimpan indeksnya.
     var indeksBagian by rememberSaveable { mutableIntStateOf(0) }
     var indeksKoleksi by rememberSaveable { mutableIntStateOf(0) }
-    val bagian = BagianProfil.entries[indeksBagian.coerceIn(BagianProfil.entries.indices)]
+    val bagianDipilih = BagianProfil.entries[indeksBagian.coerceIn(BagianProfil.entries.indices)]
+    val bagian = if (!authState.isCreator && bagianDipilih == BagianProfil.KARYA) {
+        BagianProfil.AKTIVITAS
+    } else {
+        bagianDipilih
+    }
     val koleksi = KoleksiKarya.entries[indeksKoleksi.coerceIn(KoleksiKarya.entries.indices)]
 
     var showQr by remember { mutableStateOf(false) }
@@ -259,10 +264,7 @@ fun ProfileScreen(
                         } else {
                             ProfileStat("$followingCount", "Mengikuti") { onFollowList(0) }
                             StatDivider()
-                            ProfileStat("${savedPosts.size}", "Tersimpan") {
-                                indeksBagian = BagianProfil.KARYA.ordinal
-                                indeksKoleksi = KoleksiKarya.TERSIMPAN.ordinal
-                            }
+                            ProfileStat("${savedPosts.size}", "Tersimpan", onSaved)
                             StatDivider()
                             ProfileStat("${myBookings.size}", "Booking", onMyBookings)
                         }
@@ -300,7 +302,7 @@ fun ProfileScreen(
                     edgePadding = 12.dp,
                     divider = { HorizontalDivider(color = AppColors.Border) },
                 ) {
-                    BagianProfil.entries.forEach { b ->
+                    BagianProfil.entries.filter { it != BagianProfil.KARYA || authState.isCreator }.forEach { b ->
                         Tab(
                             selected = bagian == b,
                             onClick = { indeksBagian = b.ordinal },
@@ -352,8 +354,7 @@ fun ProfileScreen(
                         onFavorites = onFavorites,
                         onSaved = onSaved,
                         onDisukai = {
-                            indeksBagian = BagianProfil.KARYA.ordinal
-                            indeksKoleksi = KoleksiKarya.DISUKAI.ordinal
+                            onFavorites()
                         },
                         onMyReviews = { indeksBagian = BagianProfil.REVIEW.ordinal },
                         onReports = onReports,

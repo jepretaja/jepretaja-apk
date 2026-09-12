@@ -55,7 +55,10 @@ class ApiClient @Inject constructor(
             val user = auth.currentUser
                 ?: throw ApiException("unauthenticated", "Anda harus masuk terlebih dahulu.")
             val token = try {
-                user.getIdToken(false).await().token
+                // Booking/preview berjalan lewat Vercel dan harus menerima
+                // token Firebase terbaru. Token cache yang sudah mendekati
+                // kedaluwarsa sebelumnya membuat form berhenti di error 401.
+                user.getIdToken(true).await().token
             } catch (e: Exception) {
                 throw ApiException("unauthenticated", "Sesi Anda berakhir. Masuk kembali untuk melanjutkan.")
             } ?: throw ApiException("unauthenticated", "Gagal memperoleh token sesi.")

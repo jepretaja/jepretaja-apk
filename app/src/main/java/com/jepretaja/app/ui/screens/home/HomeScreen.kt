@@ -249,11 +249,12 @@ fun HomeScreen(
                             contentColor = AppColors.PrimaryDark,
                         ),
                         shape = RoundedCornerShape(percent = 50),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
                         modifier = Modifier.weight(1f),
                     ) {
                         Icon(Icons.Default.Explore, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Jelajah karya", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Jelajah", maxLines = 1)
                     }
                     OutlinedButton(
                         onClick = onSearch,
@@ -262,11 +263,12 @@ fun HomeScreen(
                             brush = Brush.linearGradient(listOf(Color.White.copy(alpha = 0.65f), Color.White.copy(alpha = 0.65f)))
                         ),
                         shape = RoundedCornerShape(percent = 50),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
                         modifier = Modifier.weight(1f),
                     ) {
                         Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Cari creator", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Cari creator", maxLines = 1)
                     }
                 }
             }

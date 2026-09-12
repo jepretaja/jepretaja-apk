@@ -325,7 +325,17 @@ fun ExploreScreen(
                 FilterChip(
                     selected = selected,
                     onClick = { viewModel.setTab(tab) },
-                    label = { Text(tab, style = MaterialTheme.typography.labelMedium) },
+                    label = {
+                        Text(
+                            when (tab) {
+                                "Following" -> "Mengikuti"
+                                "For You" -> "Untukmu"
+                                "Nearby" -> "Terdekat"
+                                else -> tab
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    },
                     shape = RoundedCornerShape(percent = 50),
                     colors = FilterChipDefaults.filterChipColors(
                         containerColor = Color.Black.copy(alpha = 0.35f),

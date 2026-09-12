@@ -2,7 +2,6 @@ package com.jepretaja.app.data.repository
 
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.jepretaja.app.core.util.FirestorePaths
@@ -26,10 +25,37 @@ class ChatRepository @Inject constructor(private val db: FirebaseFirestore) {
     private val participantsCache = mutableMapOf<String, List<String>>()
     private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    fun streamChats(userId: String): Flow<List<ChatModel>> =
-        db.collection(FirestorePaths.CHATS)
-            .where(Filter.or(Filter.equalTo("customerId", userId), Filter.equalTo("creatorId", userId)))
-            .orderBy("updatedAt", Query.Direction.DESCENDING).asFlow()
+    fun streamChats(userId: String): Flow<List<ChatModel>> = callbackFlow {
+        // OR + orderBy membutuhkan composite index dan sebelumnya membuat
+        // seluruh daftar chat gagal dimuat walaupun badge unread berhasil.
+        // Dua query sederhana ini memakai index bawaan, lalu hasilnya digabung
+        // berdasarkan chatId agar percakapan dari kedua sisi tetap tampil.
+        val chatsById = mutableMapOf<String, ChatModel>()
+
+        fun publish() {
+            trySend(chatsById.values.sortedByDescending { it.updatedAt?.toDate()?.time ?: 0L })
+        }
+
+        fun listen(field: String) = db.collection(FirestorePaths.CHATS)
+            .whereEqualTo(field, userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(chatsById.values.sortedByDescending { it.updatedAt?.toDate()?.time ?: 0L })
+                    return@addSnapshotListener
+                }
+                snapshot?.documents.orEmpty().forEach { document ->
+                    document.toObject(ChatModel::class.java)?.let { chatsById[it.chatId] = it }
+                }
+                publish()
+            }
+
+        val customerListener = listen("customerId")
+        val creatorListener = listen("creatorId")
+        awaitClose {
+            customerListener.remove()
+            creatorListener.remove()
+        }
+    }
 
     fun streamChat(chatId: String) = db.collection(FirestorePaths.CHATS).document(chatId).asFlow<ChatModel>()
 
