@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.core.theme.AppRadii
@@ -51,6 +52,8 @@ fun AppBottomNavBar(
     Box(
         Modifier
             .fillMaxWidth()
+            .zIndex(10f)
+            .background(AppColors.Background)
             .navigationBarsPadding()
             .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
     ) {
