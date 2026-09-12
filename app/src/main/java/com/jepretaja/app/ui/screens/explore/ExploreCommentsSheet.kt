@@ -156,7 +156,9 @@ fun ExploreCommentsSheet(
                     IconButton(
                         enabled = canComment && text.isNotBlank(),
                         onClick = {
-                            viewModel.addComment(postId, uid, text.trim(), replyTo?.commentId, authState.profile?.name.orEmpty(), authState.profile?.photoUrl)
+                            uid?.let { userId ->
+                                viewModel.addComment(postId, userId, text.trim(), replyTo?.commentId, authState.profile?.name.orEmpty(), authState.profile?.photoUrl)
+                            }
                             text = ""
                             replyTo = null
                         },
