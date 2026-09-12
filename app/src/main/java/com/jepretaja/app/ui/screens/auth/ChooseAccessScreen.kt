@@ -59,18 +59,10 @@ fun ChooseAccessScreen(
     val googleClient = remember { GoogleSignIn.getClient(context, gso) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode != Activity.RESULT_OK) {
-            googleLoading = false
-            // Sebelumnya kembali diam-diam tanpa pesan apa pun. Google
-            // mengembalikan RESULT_CANCELED baik saat pengguna sengaja
-            // membatalkan MAUPUN saat konfigurasi salah — akibatnya
-            // kegagalan konfigurasi tampak seperti "tombol tidak berfungsi".
-            error = "Login Google dibatalkan atau gagal. " +
-                "Bila ini terjadi terus-menerus, sidik jari SHA-1 aplikasi " +
-                "kemungkinan belum didaftarkan di Firebase Console."
-            return@rememberLauncherForActivityResult
-        }
         try {
+            // Google mengirim RESULT_CANCELED juga untuk error konfigurasi.
+            // Baca task-nya terlebih dahulu supaya status 10 (SHA-1/client ID)
+            // tidak hilang dan tampil sebagai pembatalan biasa.
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
             val idToken = account?.idToken
             if (idToken == null) {
@@ -90,6 +82,7 @@ fun ChooseAccessScreen(
             // Pesan bawaannya ("10: ") tidak memberi petunjuk apa pun,
             // jadi diterjemahkan ke penyebab yang bisa ditindaklanjuti.
             error = when (e.statusCode) {
+                CommonStatusCodes.CANCELED -> "Login Google dibatalkan."
                 CommonStatusCodes.DEVELOPER_ERROR ->
                     "Konfigurasi Google Sign-In belum lengkap. Daftarkan sidik jari " +
                     "SHA-1 aplikasi ini di Firebase Console (Project Settings > " +

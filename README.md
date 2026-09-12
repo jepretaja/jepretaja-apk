@@ -84,6 +84,12 @@ Cari `SHA1` di output (untuk variant debug), copy, lalu di Firebase Console
 → Project Settings → Your apps → Android app → **Add fingerprint** → paste.
 Tanpa ini, Google Sign-In akan gagal dengan error `DEVELOPER_ERROR`.
 
+Untuk debug keystore pada mesin pengembangan ini, SHA-1 yang perlu didaftarkan
+adalah `F3:B4:CF:E3:FB:29:F0:46:BC:94:EA:73:37:66:E0:BB:2E:71:02:51`.
+Setelah menambahkan fingerprint, unduh ulang `google-services.json`, letakkan
+kembali di `app/google-services.json`, aktifkan provider Google di Firebase
+Authentication, lalu build dan pasang ulang APK debug.
+
 ## Backend produksi
 
 Backend web berada di `jepretaja_website/`: endpoint `POST /api/app` berjalan
