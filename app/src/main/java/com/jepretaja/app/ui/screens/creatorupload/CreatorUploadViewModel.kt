@@ -106,11 +106,11 @@ class CreatorUploadViewModel @Inject constructor(
         // uraian lengkapnya.
         val salinan = try {
             uris.map { selected ->
-                val normalized = if (isVideo) {
-                    runCatching { MediaNormalizer.reframeVideo(context, selected) }.getOrElse { selected }
-                } else {
-                    MediaNormalizer.normalizeImage(context, selected)
-                }
+                // Video tidak dinormalisasi ke 1920x1080 secara otomatis.
+                // File asli dipertahankan agar resolusi, rasio, dan bitrate
+                // sumber tidak turun. Kalau creator memotong durasi di halaman
+                // upload, `selected` sudah berupa hasil edit dari VideoTools.
+                val normalized = if (isVideo) selected else MediaNormalizer.normalizeImage(context, selected)
                 MediaUnggahan.salin(
                     context,
                     normalized,
