@@ -31,6 +31,7 @@ import java.util.Calendar
 import java.util.Date
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.coroutines.delay
 
 private val LOKAL_ID = Locale("in", "ID")
 
@@ -82,7 +83,16 @@ fun ChatListScreen(
         }
 
         var sudahPernahIsi by remember { mutableStateOf(false) }
-        LaunchedEffect(chats) { if (chats.isNotEmpty()) sudahPernahIsi = true }
+        LaunchedEffect(chats, myUid) {
+            if (chats.isNotEmpty()) {
+                sudahPernahIsi = true
+            } else {
+                // StateFlow dimulai dari list kosong, jadi akun tanpa chat tidak
+                // boleh tertahan di skeleton selamanya saat listener selesai.
+                delay(800)
+                sudahPernahIsi = true
+            }
+        }
 
         when {
             // Daftar kosong pada detik pertama belum tentu berarti tidak ada

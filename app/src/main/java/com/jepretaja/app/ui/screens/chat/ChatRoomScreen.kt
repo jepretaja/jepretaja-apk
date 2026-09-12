@@ -248,7 +248,8 @@ fun ChatRoomScreen(
                 }
 
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                    Modifier.fillMaxWidth().imePadding().navigationBarsPadding()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = { imagePickerLauncher.launch("image/*") }) {
