@@ -10,6 +10,10 @@ import com.jepretaja.app.core.util.asFlow
 import com.jepretaja.app.data.model.ChatModel
 import com.jepretaja.app.data.model.MessageModel
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
@@ -18,6 +22,9 @@ import javax.inject.Singleton
 
 @Singleton
 class ChatRepository @Inject constructor(private val db: FirebaseFirestore) {
+
+    private val participantsCache = mutableMapOf<String, List<String>>()
+    private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun streamChats(userId: String): Flow<List<ChatModel>> =
         db.collection(FirestorePaths.CHATS)
@@ -110,13 +117,14 @@ class ChatRepository @Inject constructor(private val db: FirebaseFirestore) {
      * tidak pernah menabrak batas kuota.
      */
     private suspend fun participantsOf(chatId: String): List<String> {
+        participantsCache[chatId]?.let { return it }
         val chat = db.collection(FirestorePaths.CHATS).document(chatId).get().await()
         return listOfNotNull(chat.getString("customerId"), chat.getString("creatorId"))
+            .also { participantsCache[chatId] = it }
     }
 
     suspend fun sendMessage(chatId: String, senderId: String, text: String) {
         val participants = participantsOf(chatId)
-        catatWaktuBalas(chatId, senderId)
         db.collection(FirestorePaths.MESSAGES).add(
             mapOf(
                 "chatId" to chatId, "senderId" to senderId, "participants" to participants,
@@ -125,6 +133,7 @@ class ChatRepository @Inject constructor(private val db: FirebaseFirestore) {
             )
         ).await()
         db.collection(FirestorePaths.CHATS).document(chatId).update("lastMessage", text, "updatedAt", FieldValue.serverTimestamp()).await()
+        backgroundScope.launch { catatWaktuBalas(chatId, senderId) }
     }
 
     /**

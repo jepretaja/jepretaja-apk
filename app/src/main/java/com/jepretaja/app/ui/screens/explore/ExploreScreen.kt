@@ -410,7 +410,7 @@ fun ExploreScreen(
         ExploreCommentsSheet(
             postId = postId,
             authViewModel = authViewModel,
-            onLoginRequired = { outerNavController.navigate(Routes.LOGIN) },
+            onLoginRequired = onLoginRequired,
             onDismiss = { commentsPostId = null },
         )
     }

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.widthIn
 import com.jepretaja.app.core.theme.AppColors
 
 /** State gagal yang seragam untuk layar yang memuat data dari jaringan. */

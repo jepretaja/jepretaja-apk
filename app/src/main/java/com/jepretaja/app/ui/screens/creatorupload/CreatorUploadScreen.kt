@@ -124,6 +124,7 @@ fun CreatorUploadScreen(
     var draftOtomatisId by remember { mutableStateOf<String?>(null) }
 
     val antrean by remember { UploadQueue.stream(context) }.collectAsState(initial = emptyList())
+    var antreanAwal by remember { mutableStateOf<Set<java.util.UUID>?>(null) }
 
     val pickImages = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { daftar ->
         if (daftar.isNotEmpty()) {
@@ -190,6 +191,22 @@ fun CreatorUploadScreen(
         error?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(antrean) {
+        val awal = antreanAwal
+        if (awal == null) {
+            antreanAwal = antrean.map { it.id }.toSet()
+        } else {
+            val selesai = antrean.firstOrNull {
+                it.id !in awal && it.state == WorkInfo.State.SUCCEEDED
+            }
+            if (selesai != null) {
+                snackbarHostState.showSnackbar("Unggahan Berhasil")
+                delay(900)
+                onBack()
+            }
         }
     }
 

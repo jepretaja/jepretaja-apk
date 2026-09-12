@@ -38,6 +38,7 @@ class NotificationRepository @Inject constructor(private val db: FirebaseFiresto
         val registration = db.collection(FirestorePaths.NOTIFICATIONS)
             .whereEqualTo("userId", userId)
             .whereEqualTo("readAt", null)
+            .limit(100)
             .addSnapshotListener { snapshot, error ->
                 trySend(if (error != null) 0 else snapshot?.size() ?: 0)
             }

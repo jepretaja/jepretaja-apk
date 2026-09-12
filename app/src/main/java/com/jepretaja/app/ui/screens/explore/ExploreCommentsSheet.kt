@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -132,6 +133,7 @@ fun ExploreCommentsSheet(
                     IconButton(onClick = { replyTo = null }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Close, "Batal membalas") }
                 }
             }
+            val uid = authState.uid
             if (authState.uid == null) {
                 Row(
                     Modifier.fillMaxWidth().padding(bottom = 18.dp),
@@ -154,7 +156,7 @@ fun ExploreCommentsSheet(
                     IconButton(
                         enabled = canComment && text.isNotBlank(),
                         onClick = {
-                            viewModel.addComment(postId, authState.uid, text.trim(), replyTo?.commentId, authState.profile?.name.orEmpty(), authState.profile?.photoUrl)
+                            viewModel.addComment(postId, uid, text.trim(), replyTo?.commentId, authState.profile?.name.orEmpty(), authState.profile?.photoUrl)
                             text = ""
                             replyTo = null
                         },
