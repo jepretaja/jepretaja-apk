@@ -9,7 +9,9 @@ import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.effect.Presentation
+import androidx.media3.transformer.DefaultEncoderFactory
 import androidx.media3.transformer.Transformer
+import androidx.media3.transformer.VideoEncoderSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -55,11 +57,38 @@ object MediaNormalizer {
     }
 
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-    suspend fun reframeVideo(context: Context, source: Uri): Uri = withContext(Dispatchers.Main) {
+    suspend fun reframeVideo(context: Context, source: Uri): Uri = withContext(Dispatchers.IO) {
+        // Jangan encode ulang video yang sudah memenuhi kontrak feed. Encode
+        // ulang dengan bitrate default Media3 membuat video 1080p terlihat
+        // pecah, padahal sumber aslinya sudah bagus.
+        val metadata = MediaMetadataRetriever()
+        val sourceWidth: Int
+        val sourceHeight: Int
+        try {
+            metadata.setDataSource(context, source)
+            sourceWidth = metadata.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
+            sourceHeight = metadata.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
+        } finally {
+            metadata.release()
+        }
+        val ratio = if (sourceHeight > 0) sourceWidth.toFloat() / sourceHeight else 0f
+        if (sourceWidth in 1..WIDTH && sourceHeight in 1..HEIGHT && kotlin.math.abs(ratio - ASPECT) < 0.02f) {
+            return@withContext source
+        }
+
         val output = File(context.filesDir, "upload_queue/reframed_${System.currentTimeMillis()}.mp4").apply { parentFile?.mkdirs() }
         val item = MediaItem.fromUri(source)
         suspendCancellableCoroutine { continuation ->
+            val bitrate = when {
+                sourceWidth >= 1920 || sourceHeight >= 1080 -> 12_000_000
+                sourceWidth >= 1280 || sourceHeight >= 720 -> 6_000_000
+                else -> 3_000_000
+            }
+            val encoderFactory = DefaultEncoderFactory.Builder(context)
+                .setRequestedVideoEncoderSettings(VideoEncoderSettings.Builder().setBitrate(bitrate).build())
+                .build()
             val transformer = Transformer.Builder(context)
+                .setEncoderFactory(encoderFactory)
                 .setVideoMimeType(MimeTypes.VIDEO_H264)
                 .setVideoEffects(listOf(Presentation.createForWidthAndHeight(WIDTH, HEIGHT, Presentation.LAYOUT_SCALE_TO_FIT_WITH_CROP)))
                 .addListener(object : Transformer.Listener {
