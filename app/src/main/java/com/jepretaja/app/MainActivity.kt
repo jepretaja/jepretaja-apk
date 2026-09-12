@@ -7,7 +7,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,7 +40,6 @@ class MainActivity : ComponentActivity() {
         // sebabnya background biru "menembus" ke semua layar (login,
         // onboarding, dst), bukan cuma splash sesaat.
         setTheme(R.style.Theme_JepretAja)
-        enableEdgeToEdge()
         val notificationRoute = intent.getStringExtra("notification_route")
         setContent {
             JepretAjaTheme {
