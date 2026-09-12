@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -131,6 +132,7 @@ fun PaymentScreen(
             com.jepretaja.app.ui.components.AppTopBar(title = "Pembayaran", onBack = onBack)
         },
     ) { padding ->
+        val webViewHeight = (LocalConfiguration.current.screenHeightDp - 220).coerceIn(360, 560).dp
         if (memuat && booking == null) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = AppColors.Primary)
@@ -192,7 +194,7 @@ fun PaymentScreen(
                                     loadUrl(snapUrl!!)
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth().height(520.dp).clip(MaterialTheme.shapes.medium),
+                            modifier = Modifier.fillMaxWidth().height(webViewHeight).clip(MaterialTheme.shapes.medium),
                         )
                     }
                     Spacer(Modifier.height(14.dp))
