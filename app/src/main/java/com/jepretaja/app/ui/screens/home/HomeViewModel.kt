@@ -135,7 +135,7 @@ class HomeViewModel @Inject constructor(
     val creatorName: StateFlow<String?> = _userId
         .flatMapLatest { uid ->
             if (uid == null) flowOf<String?>(null)
-            else flow { emit(runCatching { creatorRepository.getCreator(uid)?.displayName }.getOrNull()) }
+            else creatorRepository.streamCreator(uid).map { it?.displayName }
         }
         .catch { emit(null) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

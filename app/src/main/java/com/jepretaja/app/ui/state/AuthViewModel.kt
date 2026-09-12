@@ -122,7 +122,9 @@ class AuthViewModel @Inject constructor(
      * layar (header profil, nama di chat, dst) langsung ikut berubah. */
     fun updateProfile(name: String, phone: String?, photoUrl: String?, onResult: (String?) -> Unit) {
         viewModelScope.launch {
-            val result = runCatching { authRepository.updateMyProfile(name, phone, photoUrl) }
+            val result = runCatching {
+                authRepository.updateMyProfile(name, phone, photoUrl, isCreator = _uiState.value.isCreator)
+            }
             if (result.isSuccess) refreshProfile()
             onResult(result.exceptionOrNull()?.message)
         }

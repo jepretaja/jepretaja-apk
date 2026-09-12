@@ -165,12 +165,19 @@ class AuthRepository @Inject constructor(
      * ikut ditulis, supaya tidak ada jalan bagi klien untuk menaikkan haknya
      * sendiri lewat layar edit profil.
      */
-    suspend fun updateMyProfile(name: String, phone: String?, photoUrl: String?) {
+    suspend fun updateMyProfile(name: String, phone: String?, photoUrl: String?, isCreator: Boolean) {
         val uid = currentUser?.uid ?: throw IllegalStateException("Belum masuk.")
         val updates = mutableMapOf<String, Any?>("name" to name)
         updates["phone"] = phone
         if (photoUrl != null) updates["photoUrl"] = photoUrl
-        db.collection(FirestorePaths.USERS).document(uid).update(updates).await()
+        val batch = db.batch()
+        batch.update(db.collection(FirestorePaths.USERS).document(uid), updates)
+        if (isCreator) {
+            val creatorUpdates = mutableMapOf<String, Any?>("displayName" to name)
+            if (photoUrl != null) creatorUpdates["photoUrl"] = photoUrl
+            batch.update(db.collection(FirestorePaths.CREATORS).document(uid), creatorUpdates)
+        }
+        batch.commit().await()
     }
 
     /**

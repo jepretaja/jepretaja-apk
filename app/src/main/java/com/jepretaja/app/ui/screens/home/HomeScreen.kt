@@ -192,6 +192,22 @@ fun HomeScreen(
             }
 
             Spacer(Modifier.height(20.dp))
+            // Kategori adalah pintu masuk utama untuk memilih layanan; letakkan
+            // sebelum deretan creator supaya pengguna tidak perlu menggulir jauh.
+            Seksi(
+                judul = "Kategori",
+                subjudul = "Mulai dari jenis layanan yang kamu cari",
+            ) {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = PadTepi),
+                    horizontalArrangement = Arrangement.spacedBy(JarakItem),
+                ) {
+                    items(AppConstants.SERVICE_CATEGORIES) { kategori ->
+                        CategoryTile(label = kategori, onClick = { onCategoryClick(kategori) })
+                    }
+                }
+            }
+
             GradientHeroCard(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = PadTepi),
                 colors = listOf(AppColors.PrimaryDark, AppColors.Primary),
@@ -320,21 +336,6 @@ fun HomeScreen(
                     onCreatorClick = onCreatorClick,
                     onCobaLagi = viewModel::muatUlang,
                 )
-            }
-
-            // --- Kategori ---
-            Seksi(
-                judul = "Kategori",
-                subjudul = "Telusuri berdasarkan jenis layanan",
-            ) {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = PadTepi),
-                    horizontalArrangement = Arrangement.spacedBy(JarakItem),
-                ) {
-                    items(AppConstants.SERVICE_CATEGORIES) { kategori ->
-                        CategoryTile(label = kategori, onClick = { onCategoryClick(kategori) })
-                    }
-                }
             }
 
             // Ruang ekstra di bawah supaya isi terakhir tidak tertutup bilah
