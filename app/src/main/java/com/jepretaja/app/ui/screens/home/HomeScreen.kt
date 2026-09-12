@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -252,7 +253,7 @@ fun HomeScreen(
                     ) {
                         Icon(Icons.Default.Explore, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Jelajah karya")
+                        Text("Jelajah karya", maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     OutlinedButton(
                         onClick = onSearch,
@@ -265,7 +266,7 @@ fun HomeScreen(
                     ) {
                         Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Cari creator")
+                        Text("Cari creator", maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -524,10 +525,12 @@ private fun BarisKarya(
 /** Kartu karya visual dengan konteks creator dan engagement yang langsung terbaca. */
 @Composable
 private fun UbinKarya(post: ExplorePostModel, onClick: () -> Unit) {
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val cardWidth = (screenWidth - 56.dp).coerceIn(180.dp, 240.dp)
     Box(
         Modifier
-            .width(220.dp)
-            .height(292.dp)
+            .width(cardWidth)
+            .aspectRatio(3f / 4f)
             .premiumShadow(8.dp, SudutKartu)
             .clip(SudutKartu)
             .background(AppColors.SurfaceVariant)
