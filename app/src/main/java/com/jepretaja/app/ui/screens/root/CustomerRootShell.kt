@@ -95,6 +95,12 @@ fun CustomerRootShell(
                     innerNav.navigate(route) { popUpTo("tab_home") { saveState = true }; launchSingleTop = true; restoreState = true }
                 }
             },
+            // Creator langsung masuk ke halaman upload; tidak perlu sheet perantara.
+            centerAction = if (authState.isCreator) {
+                { outerNavController.navigate(Routes.CREATOR_UPLOAD) }
+            } else {
+                null
+            },
         )
     }) { padding ->
         NavHost(innerNav, startDestination = "tab_home", modifier = Modifier.padding(padding)) {
