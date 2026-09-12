@@ -116,7 +116,9 @@ fun CustomerRootShell(
                     },
                     onSeeExplore = { innerNav.navigate("tab_explore") },
                     onBookingClick = { id -> outerNavController.navigate(Routes.bookingDetail(id)) },
-                    onPostClick = { postId -> outerNavController.navigate(Routes.exploreDetail(postId)) },
+                    // Home adalah etalase; klik karya membuka Explore, bukan
+                    // langsung masuk ke layar komentar.
+                    onPostClick = { innerNav.navigate("tab_explore") },
                     authViewModel = authViewModel,
                 )
             }
