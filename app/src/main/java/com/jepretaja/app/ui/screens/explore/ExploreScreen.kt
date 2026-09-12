@@ -44,6 +44,7 @@ import kotlinx.coroutines.flow.flowOf
 @Composable
 fun ExploreScreen(
     authViewModel: AuthViewModel,
+    onLoginRequired: () -> Unit = {},
     onCreatorClick: (String) -> Unit,
     onSearch: () -> Unit = {},
     onPackageClick: (String) -> Unit = {},
@@ -251,13 +252,15 @@ fun ExploreScreen(
                     following = following,
                     // Hanya halaman yang sedang dilihat yang memutar video.
                     isActive = pagerState.currentPage == page,
-                    onLike = { myUid?.let { viewModel.like(post.postId, it) } },
-                    onSave = { myUid?.let { viewModel.save(post.postId, it) } },
+                    onLike = { if (myUid == null) onLoginRequired() else viewModel.like(post.postId, myUid) },
+                    onSave = { if (myUid == null) onLoginRequired() else viewModel.save(post.postId, myUid) },
                     onFollow = {
-                        myUid?.let {
+                        if (myUid == null) {
+                            onLoginRequired()
+                        } else {
                             viewModel.toggleFollow(
                                 creatorId = post.creatorId,
-                                userId = it,
+                                userId = myUid,
                                 userName = authState.profile?.name.orEmpty(),
                                 userPhotoUrl = authState.profile?.photoUrl,
                                 creatorName = post.creatorName,
@@ -407,6 +410,7 @@ fun ExploreScreen(
         ExploreCommentsSheet(
             postId = postId,
             authViewModel = authViewModel,
+            onLoginRequired = { outerNavController.navigate(Routes.LOGIN) },
             onDismiss = { commentsPostId = null },
         )
     }

@@ -24,14 +24,18 @@ import com.jepretaja.app.ui.components.BigPrimaryButton
 import com.jepretaja.app.ui.components.GradientHeroCard
 import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.components.SectionHeader
+import com.jepretaja.app.ui.state.AuthViewModel
 
 /** Package Detail (section 9 & 28). */
 @Composable
 fun PackageDetailScreen(
     onBack: () -> Unit,
     onBookingClick: (String) -> Unit,
+    onLoginRequired: () -> Unit,
+    authViewModel: AuthViewModel,
     viewModel: PackageDetailViewModel = hiltViewModel(),
 ) {
+    val authState by authViewModel.uiState.collectAsState()
     val pkg by viewModel.pkg.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
@@ -79,8 +83,10 @@ fun PackageDetailScreen(
                     )
                     Spacer(Modifier.height(32.dp))
                     BigPrimaryButton(
-                        text = "Booking Sekarang",
-                        onClick = { onBookingClick(p.packageId) },
+                        text = if (authState.isLoggedIn) "Booking Sekarang" else "Masuk untuk Booking",
+                        onClick = {
+                            if (authState.isLoggedIn) onBookingClick(p.packageId) else onLoginRequired()
+                        },
                         modifier = Modifier.padding(horizontal = 20.dp),
                     )
                     Spacer(Modifier.height(28.dp))

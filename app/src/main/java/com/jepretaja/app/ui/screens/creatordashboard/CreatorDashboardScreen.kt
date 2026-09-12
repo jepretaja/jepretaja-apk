@@ -84,6 +84,7 @@ private fun ringkasRupiah(nilai: Long): String = when {
  */
 @Composable
 fun CreatorDashboardScreen(
+    onBack: () -> Unit,
     onNotifications: () -> Unit,
     onNavigate: (String) -> Unit,
     authViewModel: AuthViewModel,
@@ -126,6 +127,7 @@ fun CreatorDashboardScreen(
         topBar = {
             AppTopBar(
                 title = "Creator Studio",
+                onBack = onBack,
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = onNotifications) {

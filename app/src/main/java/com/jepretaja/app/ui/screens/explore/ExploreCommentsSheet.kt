@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -50,6 +51,7 @@ import kotlinx.coroutines.flow.flowOf
 fun ExploreCommentsSheet(
     postId: String,
     authViewModel: AuthViewModel,
+    onLoginRequired: () -> Unit = {},
     onDismiss: () -> Unit,
     viewModel: ExploreDetailViewModel = hiltViewModel(),
 ) {
@@ -81,10 +83,18 @@ fun ExploreCommentsSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = AppColors.Surface,
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.85f)
+                .padding(horizontal = 16.dp),
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Komentar", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                 Text("${comments.size}", color = AppColors.TextSecondary)
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Tutup komentar")
+                }
             }
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CommentSort.entries.forEach { option ->
@@ -122,24 +132,34 @@ fun ExploreCommentsSheet(
                     IconButton(onClick = { replyTo = null }, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Close, "Batal membalas") }
                 }
             }
-            Row(Modifier.fillMaxWidth().padding(bottom = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    enabled = canComment,
-                    placeholder = { Text(if (canComment) "Tulis komentar..." else "Komentar dibatasi creator") },
-                    shape = RoundedCornerShape(percent = 50),
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.size(8.dp))
-                IconButton(
-                    enabled = canComment && text.isNotBlank() && authState.uid != null,
-                    onClick = {
-                        viewModel.addComment(postId, authState.uid!!, text.trim(), replyTo?.commentId, authState.profile?.name.orEmpty(), authState.profile?.photoUrl)
-                        text = ""
-                        replyTo = null
-                    },
-                ) { Icon(Icons.AutoMirrored.Filled.Send, "Kirim", tint = AppColors.Primary) }
+            if (authState.uid == null) {
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Masuk untuk ikut berkomentar", color = AppColors.TextSecondary, modifier = Modifier.weight(1f))
+                    TextButton(onClick = onLoginRequired) { Text("Masuk") }
+                }
+            } else {
+                Row(Modifier.fillMaxWidth().padding(bottom = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        enabled = canComment,
+                        placeholder = { Text(if (canComment) "Tulis komentar..." else "Komentar dibatasi creator") },
+                        shape = RoundedCornerShape(percent = 50),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    IconButton(
+                        enabled = canComment && text.isNotBlank(),
+                        onClick = {
+                            viewModel.addComment(postId, authState.uid, text.trim(), replyTo?.commentId, authState.profile?.name.orEmpty(), authState.profile?.photoUrl)
+                            text = ""
+                            replyTo = null
+                        },
+                    ) { Icon(Icons.AutoMirrored.Filled.Send, "Kirim", tint = AppColors.Primary) }
+                }
             }
         }
     }

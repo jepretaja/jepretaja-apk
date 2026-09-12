@@ -92,7 +92,7 @@ fun CustomerRootShell(
             currentRoute = currentRoute,
             onSelect = { route ->
                 if (route == "tab_inbox" && tamu) {
-                    mintaMasuk = FiturButuhAkun.BOOKING
+                    mintaMasuk = FiturButuhAkun.CHAT
                 } else {
                     innerNav.navigate(route) { popUpTo("tab_home") { saveState = true }; launchSingleTop = true; restoreState = true }
                 }
@@ -121,6 +121,7 @@ fun CustomerRootShell(
             composable("tab_explore") {
                 ExploreScreen(
                     authViewModel = authViewModel,
+                    onLoginRequired = { outerNavController.navigate(Routes.LOGIN) },
                     onSearch = { outerNavController.navigate(Routes.SEARCH) },
                     onCreatorClick = { id -> outerNavController.navigate(Routes.creatorProfile(id)) },
                     onTagClick = { tag, isCategory ->

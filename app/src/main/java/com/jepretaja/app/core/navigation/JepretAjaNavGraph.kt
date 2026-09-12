@@ -185,6 +185,7 @@ fun JepretAjaNavGraph(
         // yang sama seperti semua orang.
         composable(Routes.CREATOR_DASHBOARD) {
             CreatorDashboardScreen(
+                onBack = { navController.popBackStack() },
                 onNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 onNavigate = { route -> navController.navigate(route) },
                 authViewModel = authViewModel,
@@ -298,6 +299,8 @@ fun JepretAjaNavGraph(
             PackageDetailScreen(
                 onBack = { navController.popBackStack() },
                 onBookingClick = { packageId -> navController.navigate(Routes.bookingForm(packageId)) },
+                onLoginRequired = { navController.navigate(Routes.LOGIN) },
+                authViewModel = authViewModel,
             )
         }
 
