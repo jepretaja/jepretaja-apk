@@ -62,8 +62,6 @@ fun CustomerRootShell(
     // berubah — pembatas 5 menit di ViewModel yang memutuskan perlu-tidaknya
     // benar-benar menulis.
     LaunchedEffect(authState.uid, authState.isCreator) { authViewModel.tandaiKehadiran() }
-    var showUploadSheet by remember { mutableStateOf(false) }
-
     // Menu yang sedang diminta tamu, atau null bila tidak ada ajakan masuk yang
     // sedang tampil. Splash baru melepas pengguna ke sini setelah status auth
     // selesai dibaca, jadi `isLoggedIn == false` di titik ini benar-benar
@@ -97,8 +95,6 @@ fun CustomerRootShell(
                     innerNav.navigate(route) { popUpTo("tab_home") { saveState = true }; launchSingleTop = true; restoreState = true }
                 }
             },
-            // Hanya creator yang mendapat tombol unggah.
-            centerAction = if (authState.isCreator) ({ showUploadSheet = true }) else null,
         )
     }) { padding ->
         NavHost(innerNav, startDestination = "tab_home", modifier = Modifier.padding(padding)) {
@@ -179,11 +175,4 @@ fun CustomerRootShell(
         )
     }
 
-    if (showUploadSheet) {
-        CreatorUploadSheet(
-            onDismiss = { showUploadSheet = false },
-            onUploadMedia = { showUploadSheet = false; outerNavController.navigate(Routes.CREATOR_UPLOAD) },
-            onNewPackage = { showUploadSheet = false; outerNavController.navigate(Routes.CREATOR_PACKAGE_MANAGEMENT) },
-        )
-    }
 }
