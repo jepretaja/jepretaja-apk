@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 data class AuthUiState(
@@ -103,7 +104,13 @@ class AuthViewModel @Inject constructor(
                         // Sekarang kegagalan diperlakukan sebagai "profil belum termuat":
                         // sesi tetap dianggap login (pengguna memang sudah terautentikasi
                         // di Firebase Auth), hanya detail profilnya kosong.
-                        val profile = runCatching { authRepository.getCurrentUserProfile() }.getOrNull()
+                        // Firestore bisa menunggu terlalu lama saat jaringan
+                        // tersambung tetapi tidak benar-benar bisa menjangkau
+                        // server. Tanpa batas waktu, Splash menahan seluruh
+                        // aplikasi karena `loading` tidak pernah selesai.
+                        val profile = withTimeoutOrNull(8_000) {
+                            runCatching { authRepository.getCurrentUserProfile() }.getOrNull()
+                        }
                         _uiState.value = AuthUiState(
                             loading = false, isLoggedIn = true, uid = user.uid,
                             emailVerified = user.isEmailVerified, profile = profile,
