@@ -2,9 +2,13 @@ package com.jepretaja.app.ui.screens.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -30,6 +34,7 @@ fun RegisterCustomerScreen(
     var password by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    val formReady = name.isNotBlank() && email.contains("@") && password.length >= 8
 
     Scaffold(
         containerColor = AppColors.Background,
@@ -41,13 +46,27 @@ fun RegisterCustomerScreen(
             Modifier.padding(padding).padding(horizontal = 24.dp).fillMaxWidth().verticalScroll(rememberScrollState()),
         ) {
             Spacer(Modifier.height(12.dp))
-            Text("Buat Akun", style = MaterialTheme.typography.displaySmall, color = AppColors.TextPrimary)
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                androidx.compose.foundation.layout.Box(
+                    Modifier.size(52.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).background(AppColors.PrimarySoft),
+                    contentAlignment = androidx.compose.ui.Alignment.Center,
+                ) { Icon(Icons.Default.PersonAdd, contentDescription = null, tint = AppColors.Primary, modifier = Modifier.size(27.dp)) }
+                Spacer(Modifier.width(14.dp))
+                Column {
+                    Text("Buat Akun", style = MaterialTheme.typography.headlineMedium, color = AppColors.TextPrimary)
+                    Text("Langkah 1 dari 2", style = MaterialTheme.typography.labelMedium, color = AppColors.Primary)
+                }
+            }
             Spacer(Modifier.height(6.dp))
             Text(
                 "Daftar sebagai konsumen untuk mulai memesan sesi foto & video pilihanmu.",
                 style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary,
             )
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(22.dp))
+            LinearProgressIndicator(progress = { 0.5f }, modifier = Modifier.fillMaxWidth(), color = AppColors.Primary, trackColor = AppColors.PrimarySoft)
+            Spacer(Modifier.height(20.dp))
+            Text("Identitas akun", style = MaterialTheme.typography.titleMedium, color = AppColors.TextPrimary)
+            Spacer(Modifier.height(10.dp))
             OutlinedTextField(name, { name = it }, label = { Text("Nama Lengkap") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(14.dp))
             OutlinedTextField(email, { email = it }, label = { Text("Email") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
@@ -65,12 +84,14 @@ fun RegisterCustomerScreen(
                 visualTransformation = PasswordVisualTransformation(), singleLine = true,
                 shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth(),
             )
+            Spacer(Modifier.height(5.dp))
+            Text("Minimal 8 karakter", style = MaterialTheme.typography.labelSmall, color = if (password.length >= 8) AppColors.Success else AppColors.TextSecondary)
             error?.let { Spacer(Modifier.height(10.dp)); Text(it, color = AppColors.Danger, style = MaterialTheme.typography.bodySmall) }
             Spacer(Modifier.height(28.dp))
             BigPrimaryButton(
                 text = if (loading) "Memproses..." else "Daftar",
                 loading = loading,
-                enabled = !loading,
+                enabled = !loading && formReady,
                 onClick = {
                     loading = true; error = null
                     viewModel.registerCustomer(name.trim(), email.trim(), password, phone.trim(), address.trim(), city.trim(), province.trim(), onSuccess = { loading = false; onSuccess() }, onError = { loading = false; error = it })

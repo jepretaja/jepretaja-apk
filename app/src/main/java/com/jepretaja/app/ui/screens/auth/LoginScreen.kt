@@ -5,8 +5,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.ui.components.BigPrimaryButton
+import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.state.AuthActionsViewModel
 
 @Composable
@@ -56,13 +60,29 @@ fun LoginScreen(
             Modifier.padding(padding).padding(horizontal = 24.dp).fillMaxWidth().verticalScroll(rememberScrollState()),
         ) {
             Spacer(Modifier.height(12.dp))
-            Text("Selamat Datang", style = MaterialTheme.typography.displaySmall, color = AppColors.TextPrimary)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(52.dp).clip(RoundedCornerShape(16.dp)).background(AppColors.PrimarySoft),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Default.LockOpen, contentDescription = null, tint = AppColors.Primary, modifier = Modifier.size(27.dp)) }
+                Spacer(Modifier.width(14.dp))
+                Column {
+                    Text("Selamat Datang", style = MaterialTheme.typography.headlineMedium, color = AppColors.TextPrimary)
+                    Text("Masuk ke ruang kerja visualmu", style = MaterialTheme.typography.labelMedium, color = AppColors.Primary)
+                }
+            }
             Spacer(Modifier.height(6.dp))
             Text(
                 "Masuk untuk melanjutkan perjalanan visual kamu bersama para creator terbaik.",
                 style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary,
             )
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(22.dp))
+            PremiumCard(modifier = Modifier.fillMaxWidth(), elevation = 1.dp, color = AppColors.PrimarySoft) {
+                Text("Akun JepretAja", style = MaterialTheme.typography.titleSmall, color = AppColors.TextPrimary)
+                Spacer(Modifier.height(3.dp))
+                Text("Simpan booking, chat, dan perjalananmu di satu tempat.", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+            }
+            Spacer(Modifier.height(20.dp))
             OutlinedTextField(
                 email, { email = it }, label = { Text("Email") }, singleLine = true,
                 shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth(),
