@@ -35,6 +35,9 @@ val cloudinaryUploadPreset: String =
 val apiBaseUrl: String =
     (project.findProperty("API_BASE_URL") as String?)
         ?: System.getenv("API_BASE_URL") ?: ""
+val mapsApiKey: String =
+    (project.findProperty("MAPS_API_KEY") as String?)
+        ?: System.getenv("MAPS_API_KEY") ?: ""
 
 android {
     namespace = "com.jepretaja.app"
@@ -54,6 +57,8 @@ android {
         buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudinaryUploadPreset\"")
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
+
+    defaultConfig.manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey.ifBlank { "@string/google_api_key" }
 
     // Kunci penandatanganan dibaca dari keystore.properties yang TIDAK ikut
     // masuk git (lihat .gitignore). Google Play menolak APK/AAB yang tidak
@@ -181,6 +186,8 @@ dependencies {
 
     // --- Lokasi (setara geolocator) ---
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.maps.android:maps-compose:6.1.0")
 
     // --- Media / video ---
     implementation("androidx.media3:media3-exoplayer:1.4.1")
