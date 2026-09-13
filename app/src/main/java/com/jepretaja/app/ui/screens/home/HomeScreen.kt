@@ -91,9 +91,9 @@ fun HomeScreen(
     onCreatorClick: (String) -> Unit,
     onCategoryClick: (String) -> Unit,
     onSeeExplore: () -> Unit,
-    onChat: () -> Unit = {},
-    onBookingClick: (String) -> Unit = {},
-    onPostClick: (String) -> Unit = {},
+    onChat: () -> Unit,
+    onBookingClick: (String) -> Unit,
+    onPostClick: (String) -> Unit,
     authViewModel: AuthViewModel? = null,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -155,40 +155,74 @@ fun HomeScreen(
         Column(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()),
         ) {
-            // --- Intro ---
-            Text(
-                "Cerita yang layak diingat",
-                style = MaterialTheme.typography.displaySmall,
-                color = AppColors.TextPrimary,
-                modifier = Modifier.padding(horizontal = PadTepi),
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "Temukan karya, creator, dan momen berikutnya.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = AppColors.TextSecondary,
-                modifier = Modifier.padding(horizontal = PadTepi),
-            )
-
-            // --- Pencarian ---
-            Spacer(Modifier.height(18.dp))
-            Surface(
-                onClick = onSearch,
+            // --- Hero & pencarian ---
+            GradientHeroCard(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = PadTepi),
-                shape = RoundedCornerShape(percent = 50),
-                color = AppColors.SurfaceVariant,
+                colors = listOf(AppColors.PrimaryDark, AppColors.Primary),
             ) {
-                Row(
-                    Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                Row(verticalAlignment = Alignment.Top) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "Cerita yang layak diingat.",
+                            color = AppColors.OnPrimary.copy(alpha = 0.78f),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Temukan creator yang tepat untuk momen besarmu.",
+                            color = AppColors.OnPrimary,
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                    }
+                    Box(
+                        Modifier.size(48.dp).clip(RoundedCornerShape(16.dp))
+                            .background(Color.White.copy(alpha = 0.14f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AppColors.OnPrimary, modifier = Modifier.size(25.dp))
+                    }
+                }
+                Spacer(Modifier.height(18.dp))
+                Surface(
+                    onClick = onSearch,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(percent = 50),
+                    color = Color.White,
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = AppColors.TextSecondary)
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        "Cari fotografer, wedding, kota...",
-                        color = AppColors.TextSecondary,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 13.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Default.Search, contentDescription = null, tint = AppColors.Primary)
+                        Spacer(Modifier.width(10.dp))
+                        Text("Cari fotografer, wedding, kota...", color = AppColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                Spacer(Modifier.height(14.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        onClick = onSeeExplore,
+                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.OnPrimary, contentColor = AppColors.PrimaryDark),
+                        shape = RoundedCornerShape(percent = 50),
+                        contentPadding = PaddingValues(horizontal = 14.dp),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Default.Explore, contentDescription = null, modifier = Modifier.size(17.dp))
+                        Spacer(Modifier.width(5.dp))
+                        Text("Jelajahi", maxLines = 1)
+                    }
+                    OutlinedButton(
+                        onClick = onCategoryClick.let { { it("Wedding") } },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.OnPrimary),
+                        border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(brush = Brush.linearGradient(listOf(Color.White.copy(alpha = 0.65f), Color.White.copy(alpha = 0.65f)))),
+                        shape = RoundedCornerShape(percent = 50),
+                        contentPadding = PaddingValues(horizontal = 14.dp),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Default.FavoriteBorder, contentDescription = null, modifier = Modifier.size(17.dp))
+                        Spacer(Modifier.width(5.dp))
+                        Text("Wedding", maxLines = 1)
+                    }
                 }
             }
 
@@ -205,70 +239,6 @@ fun HomeScreen(
                 ) {
                     items(AppConstants.SERVICE_CATEGORIES) { kategori ->
                         CategoryTile(label = kategori, onClick = { onCategoryClick(kategori) })
-                    }
-                }
-            }
-
-            GradientHeroCard(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = PadTepi),
-                colors = listOf(AppColors.PrimaryDark, AppColors.Primary),
-            ) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            "Momen penting, creator yang tepat.",
-                            color = AppColors.OnPrimary,
-                            style = MaterialTheme.typography.headlineSmall,
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            "Jelajahi portofolio nyata dan temukan fotografer yang sesuai gaya kamu.",
-                            color = AppColors.OnPrimary.copy(alpha = 0.78f),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                    Box(
-                        Modifier.size(46.dp).clip(RoundedCornerShape(16.dp))
-                            .background(Color.White.copy(alpha = 0.14f)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = AppColors.OnPrimary,
-                            modifier = Modifier.size(24.dp),
-                        )
-                    }
-                }
-                Spacer(Modifier.height(18.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(
-                        onClick = onSeeExplore,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppColors.OnPrimary,
-                            contentColor = AppColors.PrimaryDark,
-                        ),
-                        shape = RoundedCornerShape(percent = 50),
-                        contentPadding = PaddingValues(horizontal = 12.dp),
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(Icons.Default.Explore, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Jelajah", maxLines = 1)
-                    }
-                    OutlinedButton(
-                        onClick = onSearch,
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.OnPrimary),
-                        border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
-                            brush = Brush.linearGradient(listOf(Color.White.copy(alpha = 0.65f), Color.White.copy(alpha = 0.65f)))
-                        ),
-                        shape = RoundedCornerShape(percent = 50),
-                        contentPadding = PaddingValues(horizontal = 12.dp),
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Cari creator", maxLines = 1)
                     }
                 }
             }

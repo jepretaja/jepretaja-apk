@@ -5,17 +5,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.ui.components.AppTopBar
@@ -25,18 +25,21 @@ import com.jepretaja.app.ui.components.rememberAppTopBarScrollBehavior
 import com.jepretaja.app.ui.state.AuthViewModel
 import com.jepretaja.app.data.work.UploadQueue
 import androidx.work.WorkInfo
-
 /** Jenis notifikasi yang lahir dari interaksi sosial, bukan dari transaksi. */
 private val JENIS_SOSIAL = setOf("like", "comment", "follow")
+private val JENIS_BOOKING = setOf("booking", "booking_created", "booking_confirmed", "booking_cancelled")
+private val JENIS_MESSAGE = setOf("chat", "message")
+private val JENIS_PAYMENT = setOf("payment", "refund", "withdrawal")
 
-private val JUDUL_TAB = listOf("Semua", "Suka", "Komentar", "Pengikut", "Sistem")
+private val JUDUL_TAB = listOf("All", "Bookings", "Social", "Messages", "Payments", "System")
 
 /** Notification System (section 17) — inbox bertab seperti TikTok. */
 @Composable
 fun NotificationsScreen(
     onBack: () -> Unit,
     authViewModel: AuthViewModel,
-    onUploadClick: () -> Unit = {},
+    onUploadClick: () -> Unit,
+    onNotificationClick: (com.jepretaja.app.data.model.NotificationModel) -> Unit,
     viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
     val authState by authViewModel.uiState.collectAsState()
@@ -63,15 +66,19 @@ fun NotificationsScreen(
         // tercampur dalam satu daftar panjang.
         val items = remember(semua, tab) {
             when (tab) {
-                1 -> semua.filter { it.type == "like" }
-                2 -> semua.filter { it.type == "comment" }
-                3 -> semua.filter { it.type == "follow" }
-                4 -> semua.filter { it.type !in JENIS_SOSIAL }
+                1 -> semua.filter { it.type in JENIS_BOOKING }
+                2 -> semua.filter { it.type in JENIS_SOSIAL }
+                3 -> semua.filter { it.type in JENIS_MESSAGE }
+                4 -> semua.filter { it.type in JENIS_PAYMENT }
+                5 -> semua.filter { it.type !in JENIS_SOSIAL && it.type !in JENIS_BOOKING && it.type !in JENIS_MESSAGE && it.type !in JENIS_PAYMENT }
                 else -> semua
             }
         }
 
         Column(Modifier.padding(padding).fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = { viewModel.markAllRead(myUid) }, enabled = semua.any { it.readAt == null }) { Text("Mark all as read") }
+        }
         ScrollableTabRow(
             selectedTabIndex = tab,
             containerColor = AppColors.Background,
@@ -80,10 +87,11 @@ fun NotificationsScreen(
         ) {
             JUDUL_TAB.forEachIndexed { index, judul ->
                 val jumlahBaru = when (index) {
-                    1 -> semua.count { it.type == "like" && it.readAt == null }
-                    2 -> semua.count { it.type == "comment" && it.readAt == null }
-                    3 -> semua.count { it.type == "follow" && it.readAt == null }
-                    4 -> semua.count { it.type !in JENIS_SOSIAL && it.readAt == null }
+                    1 -> semua.count { it.type in JENIS_BOOKING && it.readAt == null }
+                    2 -> semua.count { it.type in JENIS_SOSIAL && it.readAt == null }
+                    3 -> semua.count { it.type in JENIS_MESSAGE && it.readAt == null }
+                    4 -> semua.count { it.type in JENIS_PAYMENT && it.readAt == null }
+                    5 -> semua.count { it.type !in JENIS_SOSIAL && it.type !in JENIS_BOOKING && it.type !in JENIS_MESSAGE && it.type !in JENIS_PAYMENT && it.readAt == null }
                     else -> semua.count { it.readAt == null }
                 }
                 Tab(
@@ -108,7 +116,7 @@ fun NotificationsScreen(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                if (tab == 0 || tab == 4) {
+                if (tab == 0 || tab == 5) {
                     items(uploads, key = { "upload_${it.id}" }) { upload ->
                         val (title, body) = when (upload.state) {
                             WorkInfo.State.RUNNING -> "Upload sedang berjalan" to "Media sedang diproses dan diunggah. ${(upload.progress * 100).toInt()}%"
@@ -131,7 +139,7 @@ fun NotificationsScreen(
                     PremiumCard(
                         modifier = Modifier.fillMaxWidth(),
                         elevation = if (unread) 5.dp else 2.dp,
-                        onClick = { viewModel.markRead(n.notificationId) },
+                        onClick = { viewModel.markRead(n.notificationId); onNotificationClick(n) },
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(

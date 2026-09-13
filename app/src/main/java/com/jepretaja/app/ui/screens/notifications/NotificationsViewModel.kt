@@ -20,4 +20,8 @@ class NotificationsViewModel @Inject constructor(
     fun markRead(notificationId: String) {
         viewModelScope.launch { runCatching { repository.markRead(notificationId) } }
     }
+
+    fun markAllRead(userId: String) {
+        viewModelScope.launch { runCatching { repository.markAllRead(userId) } }
+    }
 }

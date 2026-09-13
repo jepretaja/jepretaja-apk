@@ -7,6 +7,8 @@ import com.jepretaja.app.core.util.FirestorePaths
 import com.jepretaja.app.core.util.asFlow
 import com.jepretaja.app.data.model.CreatorModel
 import com.jepretaja.app.data.model.ExplorePostModel
+import com.jepretaja.app.data.model.PackageModel
+import com.jepretaja.app.data.model.PortfolioModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -50,17 +52,33 @@ class SearchResultViewModel @Inject constructor(
         val batas = if (filters.sort == SearchSort.TERDEKAT) 200L else 60L
 
         return q.limit(batas).asFlow<CreatorModel>()
-            .map { list -> urutkan(list.filter { cocok(it, filters) }, filters, lat, lng) }
+            .map { list -> urutkan(list.filter { cocok(it, filters, lat, lng) }, filters, lat, lng) }
             .catch { emit(emptyList()) }
     }
 
-    private fun cocok(c: CreatorModel, f: SearchFilters): Boolean {
+    private fun cocok(c: CreatorModel, f: SearchFilters, lat: Double?, lng: Double?): Boolean {
         val kata = f.query?.trim()
         val cocokKata = kata.isNullOrBlank() ||
             c.displayName.contains(kata, ignoreCase = true) ||
             (c.city?.contains(kata, ignoreCase = true) == true) ||
             c.categories.any { it.contains(kata, ignoreCase = true) }
+        val jarak = if (lat != null && lng != null && c.serviceLat != null && c.serviceLng != null) {
+            haversineKm(lat, lng, c.serviceLat, c.serviceLng)
+        } else null
+        val tanggalTersedia = f.date == null || c.acceptingBookings
+        val availabilityCocok = when (f.availability) {
+            null -> true
+            "today", "weekend" -> c.acceptingBookings && c.awayUntil == null
+            else -> true
+        }
         return cocokKata &&
+            (f.location.isNullOrBlank() || c.city?.contains(f.location!!, ignoreCase = true) == true) &&
+            (f.maxDistanceKm == null || jarak != null && jarak <= f.maxDistanceKm!!) &&
+            tanggalTersedia && availabilityCocok &&
+            (f.photographyType == null || f.photographyType in c.photographyTypes) &&
+            (f.style == null || f.style in c.styles) &&
+            (f.minExperienceBookings == null || c.completedBookings >= f.minExperienceBookings!!) &&
+            (f.maxResponseMinutes == null || c.avgResponseMinutes != null && c.avgResponseMinutes!! <= f.maxResponseMinutes!!) &&
             (f.categories.isEmpty() || c.categories.any { it in f.categories }) &&
             (f.minRating == null || c.rating >= f.minRating!!) &&
             // Creator tanpa harga TIDAK lolos filter harga. Sebelumnya ia lolos
@@ -157,6 +175,40 @@ class SearchResultViewModel @Inject constructor(
                         p.creatorName.contains(kata, ignoreCase = true) ||
                         p.category.contains(kata, ignoreCase = true)) &&
                         (filters.categories.isEmpty() || p.category in filters.categories)
+                }
+            }
+            .catch { emit(emptyList()) }
+    }
+
+    /** Paket aktif yang cocok berdasarkan nama, deskripsi, kategori, atau harga. */
+    fun packages(filters: SearchFilters): Flow<List<PackageModel>> {
+        val kata = filters.query?.trim().orEmpty()
+        return db.collection(FirestorePaths.PACKAGES)
+            .whereEqualTo("active", true)
+            .limit(120)
+            .asFlow<PackageModel>()
+            .map { list ->
+                list.filter { pkg ->
+                    (kata.isBlank() || pkg.name.contains(kata, ignoreCase = true) ||
+                        pkg.description.contains(kata, ignoreCase = true)) &&
+                        (filters.minPrice == null || pkg.price >= filters.minPrice!!) &&
+                        (filters.maxPrice == null || pkg.price <= filters.maxPrice!!)
+                }.sortedBy { it.price }
+            }
+            .catch { emit(emptyList()) }
+    }
+
+    /** Portfolio aktif untuk discovery visual; kliknya membuka profil creator pemilik. */
+    fun portfolios(filters: SearchFilters): Flow<List<PortfolioModel>> {
+        val kata = filters.query?.trim().orEmpty()
+        return db.collection(FirestorePaths.PORTFOLIOS)
+            .whereEqualTo("status", "active")
+            .limit(120)
+            .asFlow<PortfolioModel>()
+            .map { list ->
+                list.filter { portfolio ->
+                    kata.isBlank() || portfolio.title.contains(kata, ignoreCase = true) ||
+                        portfolio.category.contains(kata, ignoreCase = true)
                 }
             }
             .catch { emit(emptyList()) }

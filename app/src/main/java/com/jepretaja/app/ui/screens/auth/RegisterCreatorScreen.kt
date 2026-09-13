@@ -34,6 +34,7 @@ fun RegisterCreatorScreen(
     var password by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var termsAccepted by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = AppColors.Background,
@@ -74,6 +75,14 @@ fun RegisterCreatorScreen(
                 visualTransformation = PasswordVisualTransformation(), singleLine = true,
                 shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth(),
             )
+            Spacer(Modifier.height(6.dp))
+            Text("Progress onboarding: 1/10 completed", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
+            LinearProgressIndicator(progress = { 0.1f }, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+            Text("Setelah akun dibuat: photography type, location, portfolio, services, pricing, availability, bank account, verification, publish profile.", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(termsAccepted, { termsAccepted = it })
+                Text("Saya menyetujui Terms dan Privacy Policy", style = MaterialTheme.typography.bodySmall)
+            }
             Spacer(Modifier.height(16.dp))
             PremiumCard(modifier = Modifier.fillMaxWidth(), elevation = 2.dp, color = AppColors.PrimarySoft) {
                 Row(verticalAlignment = Alignment.Top) {
@@ -90,7 +99,7 @@ fun RegisterCreatorScreen(
             BigPrimaryButton(
                 text = if (loading) "Memproses..." else "Daftar sebagai Creator",
                 loading = loading,
-                enabled = !loading,
+                enabled = !loading && termsAccepted && password.length >= 8,
                 onClick = {
                     loading = true; error = null
                     viewModel.registerCreator(name.trim(), email.trim(), password, city.trim(), phone.trim(), onSuccess = { loading = false; onSuccess() }, onError = { loading = false; error = it })

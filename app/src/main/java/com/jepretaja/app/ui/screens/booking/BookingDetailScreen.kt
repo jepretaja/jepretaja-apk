@@ -64,6 +64,7 @@ fun BookingDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showDisputeSheet by remember { mutableStateOf(false) }
     var showCancelConfirm by remember { mutableStateOf(false) }
+    var cancelReason by remember { mutableStateOf("change_of_plans") }
     var showCompleteConfirm by remember { mutableStateOf(false) }
 
     val payment by viewModel.payment.collectAsState()
@@ -184,6 +185,10 @@ fun BookingDetailScreen(
                                 InfoRow("Platform Fee (${pb.platformFeePercent}%)", Formatters.currency(pb.platformFee))
                             }
                         }
+                        Spacer(Modifier.height(20.dp))
+                        SectionHeader("Timeline Booking")
+                        Spacer(Modifier.height(10.dp))
+                        BookingTimeline(status = b.status)
                         // Slip hanya masuk akal setelah ada uang yang benar-benar
                         // masuk. Menawarkannya pada booking yang belum dibayar
                         // berarti memberi "bukti pembayaran" untuk pembayaran
@@ -226,7 +231,7 @@ fun BookingDetailScreen(
                                 },
                                 shape = RoundedCornerShape(percent = 50),
                                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                            ) { Icon(Icons.Filled.Chat, contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Chat") }
+                            ) { Icon(Icons.Filled.Chat, contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Message Creator") }
                             Spacer(Modifier.height(12.dp))
 
                             // --- Aksi Creator ---
@@ -276,9 +281,11 @@ fun BookingDetailScreen(
     }
 
     if (showCancelConfirm) {
-        ConfirmDialog(
-            title = "Batalkan Booking?", message = "Booking ini akan dibatalkan.",
-            onConfirm = { showCancelConfirm = false; viewModel.cancelBooking(bookingId) },
+        CancelBookingDialog(
+            total = booking?.total ?: 0L,
+            reason = cancelReason,
+            onReason = { cancelReason = it },
+            onConfirm = { showCancelConfirm = false; viewModel.cancelBooking(bookingId, cancelReason) },
             onDismiss = { showCancelConfirm = false },
         )
     }
@@ -294,6 +301,29 @@ fun BookingDetailScreen(
             onDismiss = { showDisputeSheet = false },
             onSubmit = { reason -> showDisputeSheet = false; viewModel.openDispute(bookingId, reason) },
         )
+    }
+}
+
+@Composable
+private fun BookingTimeline(status: String) {
+    val steps = listOf(
+        "Booking requested" to setOf(BookingStatus.DRAFT, BookingStatus.PENDING_PAYMENT, BookingStatus.PAID, BookingStatus.CONFIRMED, BookingStatus.UPCOMING, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CUSTOMER_CONFIRMED, BookingStatus.FUNDS_RELEASED, BookingStatus.REVIEWED),
+        "Payment received" to setOf(BookingStatus.PAID, BookingStatus.CONFIRMED, BookingStatus.UPCOMING, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CUSTOMER_CONFIRMED, BookingStatus.FUNDS_RELEASED, BookingStatus.REVIEWED),
+        "Creator confirmed" to setOf(BookingStatus.CONFIRMED, BookingStatus.UPCOMING, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CUSTOMER_CONFIRMED, BookingStatus.FUNDS_RELEASED, BookingStatus.REVIEWED),
+        "Event day" to setOf(BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CUSTOMER_CONFIRMED, BookingStatus.FUNDS_RELEASED, BookingStatus.REVIEWED),
+        "Delivery" to setOf(BookingStatus.COMPLETED, BookingStatus.CUSTOMER_CONFIRMED, BookingStatus.FUNDS_RELEASED, BookingStatus.REVIEWED),
+        "Completed" to setOf(BookingStatus.CUSTOMER_CONFIRMED, BookingStatus.FUNDS_RELEASED, BookingStatus.REVIEWED),
+    )
+    PremiumCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), elevation = 3.dp) {
+        steps.forEachIndexed { index, (label, completedFor) ->
+            val done = status in completedFor
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(if (done) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked, contentDescription = null, tint = if (done) AppColors.Success else AppColors.TextSecondary, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(10.dp))
+                Text(label, color = if (done) AppColors.TextPrimary else AppColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+            }
+            if (index < steps.lastIndex) Spacer(Modifier.height(10.dp))
+        }
     }
 }
 
@@ -346,6 +376,25 @@ private fun ConfirmDialog(title: String, message: String, onConfirm: () -> Unit,
         text = { Text(message) },
         confirmButton = { TextButton(onClick = onConfirm) { Text("Ya, lanjutkan", color = AppColors.Primary) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } },
+    )
+}
+
+@Composable
+private fun CancelBookingDialog(total: Long, reason: String, onReason: (String) -> Unit, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val reasons = listOf("change_of_plans" to "Change of plans", "creator_unavailable" to "Creator unavailable", "price_issue" to "Price issue", "emergency" to "Emergency", "other" to "Other")
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cancel booking") },
+        text = {
+            Column {
+                Text("Why?", style = MaterialTheme.typography.titleSmall)
+                reasons.forEach { (value, label) -> Row(verticalAlignment = Alignment.CenterVertically) { RadioButton(reason == value, { onReason(value) }); Text(label) } }
+                Spacer(Modifier.height(8.dp))
+                Text("Estimated refund: ${Formatters.currency(total)}", color = AppColors.Primary, style = MaterialTheme.typography.titleSmall)
+            }
+        },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Cancel booking", color = AppColors.Danger) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Keep booking") } },
     )
 }
 

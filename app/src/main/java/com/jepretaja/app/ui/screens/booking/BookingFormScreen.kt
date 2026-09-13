@@ -80,6 +80,7 @@ fun BookingFormScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     var pilihTanggal by remember { mutableStateOf(false) }
+    var termsAccepted by remember { mutableStateOf(false) }
     val gulir = rememberScrollState()
 
     // Setiap pindah langkah, halaman kembali ke atas. Tanpa ini, langkah baru
@@ -115,7 +116,9 @@ fun BookingFormScreen(
                     state = state,
                     onMundur = viewModel::mundur,
                     onLanjut = viewModel::lanjut,
-                    onKirim = { viewModel.submit(onSubmitted) },
+                    onKirim = { if (termsAccepted) viewModel.submit(onSubmitted) },
+                    termsAccepted = termsAccepted,
+                    onTermsChanged = { termsAccepted = it },
                 )
             }
         },
@@ -551,6 +554,10 @@ private fun LangkahKonfirmasi(
     }
     Spacer(Modifier.height(8.dp))
     Box(Modifier.padding(horizontal = PadTepi)) { PriceBreakdownCard(state) }
+    Spacer(Modifier.height(12.dp))
+    Row(Modifier.padding(horizontal = PadTepi), verticalAlignment = Alignment.CenterVertically) {
+        Text("Saya menyetujui syarat layanan dan kebijakan pembatalan JepretAja.", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+    }
 }
 
 @Composable
@@ -587,6 +594,8 @@ private fun BilahLangkah(
     onMundur: () -> Unit,
     onLanjut: () -> Unit,
     onKirim: () -> Unit,
+    termsAccepted: Boolean,
+    onTermsChanged: (Boolean) -> Unit,
 ) {
     val terakhir = state.langkah == LangkahBooking.KONFIRMASI
     val total = (state.priceBreakdown?.get("total") as? Number)?.toLong()
@@ -622,6 +631,12 @@ private fun BilahLangkah(
                             modifier = Modifier.height(52.dp),
                         ) { Text("Kembali") }
                         Spacer(Modifier.width(10.dp))
+                    }
+                    if (terakhir) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
+                            Checkbox(checked = termsAccepted, onCheckedChange = onTermsChanged)
+                            Text("Setujui terms sebelum membuat booking", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+                        }
                     }
                 }
                 Button(

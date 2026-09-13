@@ -46,11 +46,12 @@ fun AppBottomNavBar(
     tabs: List<NavTab>,
     currentRoute: String?,
     onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
     centerAction: (() -> Unit)? = null,
     centerActionLabel: String = "Unggah",
 ) {
     Box(
-        Modifier
+        modifier
             .fillMaxWidth()
             .zIndex(10f)
             .background(AppColors.Background)

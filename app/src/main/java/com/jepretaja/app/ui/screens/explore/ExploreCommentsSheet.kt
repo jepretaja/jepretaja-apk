@@ -52,7 +52,7 @@ import kotlinx.coroutines.flow.flowOf
 fun ExploreCommentsSheet(
     postId: String,
     authViewModel: AuthViewModel,
-    onLoginRequired: () -> Unit = {},
+    onLoginRequired: () -> Unit,
     onDismiss: () -> Unit,
     viewModel: ExploreDetailViewModel = hiltViewModel(),
 ) {

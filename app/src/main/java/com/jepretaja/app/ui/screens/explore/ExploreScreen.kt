@@ -44,10 +44,10 @@ import kotlinx.coroutines.flow.flowOf
 @Composable
 fun ExploreScreen(
     authViewModel: AuthViewModel,
-    onLoginRequired: () -> Unit = {},
+    onLoginRequired: () -> Unit,
     onCreatorClick: (String) -> Unit,
-    onSearch: () -> Unit = {},
-    onPackageClick: (String) -> Unit = {},
+    onSearch: () -> Unit,
+    onPackageClick: (String) -> Unit,
     /** [isCategory] true untuk kategori resmi, false untuk tagar bebas. */
     onTagClick: (String, Boolean) -> Unit = { _, _ -> },
     viewModel: ExploreViewModel = hiltViewModel(),

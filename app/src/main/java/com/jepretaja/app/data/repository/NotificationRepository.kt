@@ -49,4 +49,17 @@ class NotificationRepository @Inject constructor(private val db: FirebaseFiresto
         db.collection(FirestorePaths.NOTIFICATIONS).document(notificationId)
             .update("readAt", FieldValue.serverTimestamp()).await()
     }
+
+    suspend fun markAllRead(userId: String) {
+        val snapshot = db.collection(FirestorePaths.NOTIFICATIONS)
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("readAt", null)
+            .limit(100)
+            .get().await()
+        val batch = db.batch()
+        snapshot.documents.forEach { doc ->
+            batch.update(doc.reference, "readAt", FieldValue.serverTimestamp())
+        }
+        batch.commit().await()
+    }
 }

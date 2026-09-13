@@ -26,6 +26,8 @@ data class CreatorModel(
     val bio: String? = null,
     val city: String? = null,
     val categories: List<String> = emptyList(),
+    val photographyTypes: List<String> = emptyList(),
+    val styles: List<String> = emptyList(),
     val rating: Double = 0.0,
     val reviewCount: Int = 0,
     val followerCount: Int = 0,
@@ -99,4 +101,7 @@ data class CreatorModel(
     // supaya tidak bisa dikarang sendiri oleh pemilik profil.
     val totalBookings: Int = 0,
     val completedBookings: Int = 0,
+    val profileViews: Long = 0,
+    val portfolioViews: Long = 0,
+    val responseRate: Int = 0,
 )

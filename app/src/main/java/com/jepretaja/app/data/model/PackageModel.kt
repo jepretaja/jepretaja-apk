@@ -12,6 +12,7 @@ data class PackageModel(
     val output: String? = null,
     val description: String = "",
     val active: Boolean = true,
+    val addOns: List<PackageAddOnModel> = emptyList(),
 )
 
 /**

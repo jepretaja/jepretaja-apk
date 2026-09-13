@@ -59,7 +59,7 @@ import com.jepretaja.app.ui.state.AuthViewModel
 import kotlinx.coroutines.flow.flowOf
 
 private enum class ProfileCollection(val label: String) {
-    POSTS("Karya"), LIKED("Disukai"), SAVED("Tersimpan"), BOOKINGS("Booking"),
+    POSTS("Posts"), MEDIA("Media"), SAVED("Saved"), BOOKINGS("Bookings"), REVIEWS("Reviews"), FAVORITES("Favorites"), FOLLOWERS("Followers"), FOLLOWING("Following"),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,10 +119,9 @@ fun ModernProfileScreen(
         val name = authState.profile?.name?.takeIf { it.isNotBlank() } ?: "Pengguna JepretAja"
         val username = "@" + name.lowercase().replace("[^a-z0-9]".toRegex(), "").take(20).ifBlank { "pengguna" }
         val collection = when (selected) {
-            ProfileCollection.POSTS -> posts
-            ProfileCollection.LIKED -> liked
+            ProfileCollection.POSTS, ProfileCollection.MEDIA -> posts
             ProfileCollection.SAVED -> saved
-            ProfileCollection.BOOKINGS -> emptyList()
+            else -> emptyList()
         }
         val likes = if (authState.isCreator) posts.sumOf { it.likeCount } else liked.size.toLong()
         val followerCount = creator?.followerCount ?: 0
@@ -226,16 +225,34 @@ fun ModernProfileScreen(
             Spacer(Modifier.height(AppSpacing.lg))
             ScrollableTabRow(selectedTabIndex = selected.ordinal, edgePadding = AppSpacing.sm, containerColor = Color.Transparent, divider = { HorizontalDivider(color = AppColors.Border) }) {
                 ProfileCollection.entries.forEach { tab ->
-                    Tab(selected = selected == tab, onClick = { selected = tab }, text = { Text(tab.label, style = MaterialTheme.typography.labelLarge) }, icon = { Icon(if (tab == ProfileCollection.POSTS) Icons.Default.GridView else if (tab == ProfileCollection.SAVED) Icons.Default.BookmarkBorder else if (tab == ProfileCollection.LIKED) Icons.Default.FavoriteBorder else Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(18.dp)) })
+                    Tab(selected = selected == tab, onClick = {
+                        when (tab) {
+                            ProfileCollection.FAVORITES -> onFavorites()
+                            ProfileCollection.REVIEWS -> onMyReviews()
+                            ProfileCollection.FOLLOWERS -> onFollowList(1)
+                            ProfileCollection.FOLLOWING -> onFollowList(0)
+                            else -> selected = tab
+                        }
+                    }, text = { Text(tab.label, style = MaterialTheme.typography.labelLarge) }, icon = { Icon(if (tab == ProfileCollection.POSTS || tab == ProfileCollection.MEDIA) Icons.Default.GridView else if (tab == ProfileCollection.SAVED) Icons.Default.BookmarkBorder else if (tab == ProfileCollection.FAVORITES) Icons.Default.FavoriteBorder else if (tab == ProfileCollection.FOLLOWERS || tab == ProfileCollection.FOLLOWING) Icons.Default.People else Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(18.dp)) })
                 }
             }
 
             Spacer(Modifier.height(AppSpacing.md))
             if (selected == ProfileCollection.BOOKINGS) {
                 BookingCollection(bookings = bookings, onOpen = onMyBookings)
+            } else if (selected == ProfileCollection.MEDIA) {
+                SocialCollectionAction("Media", "Video dan media visual yang kamu bagikan akan muncul di sini.", onPostClick = { posts.firstOrNull()?.let { onPostClick(it.postId) } })
+            } else if (selected == ProfileCollection.REVIEWS) {
+                SocialCollectionAction("Reviews", "Lihat semua review dan pengalaman booking kamu.", onPostClick = { onMyReviews() })
+            } else if (selected == ProfileCollection.FAVORITES) {
+                SocialCollectionAction("Favorites", "Creator dan package favoritmu tersimpan di marketplace.", onPostClick = onFavorites)
+            } else if (selected == ProfileCollection.FOLLOWERS) {
+                SocialCollectionAction("Followers", "Lihat orang yang mengikuti profilmu.", onPostClick = { onFollowList(1) })
+            } else if (selected == ProfileCollection.FOLLOWING) {
+                SocialCollectionAction("Following", "Lihat creator yang kamu ikuti.", onPostClick = { onFollowList(0) })
             } else if (collection.isEmpty()) {
                 EmptyState(
-                    icon = if (selected == ProfileCollection.SAVED) Icons.Default.BookmarkBorder else if (selected == ProfileCollection.LIKED) Icons.Default.FavoriteBorder else Icons.Default.GridView,
+                    icon = if (selected == ProfileCollection.SAVED) Icons.Default.BookmarkBorder else if (selected == ProfileCollection.FAVORITES) Icons.Default.FavoriteBorder else Icons.Default.GridView,
                     title = if (selected == ProfileCollection.POSTS) "Belum ada karya" else "Belum ada konten",
                     description = if (selected == ProfileCollection.POSTS) "Mulai bagikan karya pertama kamu di JepretAja." else "Konten yang kamu pilih akan muncul di sini.",
                     actionLabel = if (selected == ProfileCollection.POSTS && authState.isCreator) "+ Buat Karya" else null,
@@ -257,6 +274,17 @@ fun ModernProfileScreen(
                 dismissButton = { TextButton(onClick = { showShare = false }) { Text("Tutup") } },
             )
         }
+    }
+}
+
+@Composable
+private fun SocialCollectionAction(title: String, description: String, onPostClick: () -> Unit) {
+    PremiumCard(modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xl), elevation = 3.dp, onClick = onPostClick) {
+        Text(title, style = MaterialTheme.typography.titleMedium, color = AppColors.TextPrimary)
+        Spacer(Modifier.height(5.dp))
+        Text(description, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+        Spacer(Modifier.height(10.dp))
+        Text("Buka koleksi  →", style = MaterialTheme.typography.labelLarge, color = AppColors.Primary)
     }
 }
 

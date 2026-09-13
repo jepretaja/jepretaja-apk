@@ -253,6 +253,7 @@ fun JepretAjaNavGraph(
                 onBack = { navController.popBackStack() },
                 onCreatorClick = { id -> navController.navigate(Routes.creatorProfile(id)) },
                 onPostClick = { postId -> navController.navigate(Routes.exploreDetail(postId)) },
+                onPackageClick = { packageId -> navController.navigate(Routes.packageDetail(packageId)) },
             )
         }
         composable(
@@ -287,6 +288,8 @@ fun JepretAjaNavGraph(
                 onReviewsClick = { creatorId -> navController.navigate(Routes.reviews(creatorId)) },
                 onPackageClick = { packageId -> navController.navigate(Routes.packageDetail(packageId)) },
                 onLoginRequired = { navController.navigate(Routes.LOGIN) },
+                onCategoryClick = { category -> navController.navigate(Routes.tagFeed(category, true)) },
+                onPostClick = { postId -> navController.navigate(Routes.exploreDetail(postId)) },
                 authViewModel = authViewModel,
                 onFollowList = { id, tab -> navController.navigate(Routes.followList(id, tab)) },
             )
@@ -395,6 +398,14 @@ fun JepretAjaNavGraph(
                 onBack = { navController.popBackStack() },
                 authViewModel = authViewModel,
                 onUploadClick = { navController.navigate(Routes.CREATOR_UPLOAD) },
+                onNotificationClick = { n ->
+                    when (n.type) {
+                        "chat", "message" -> n.referenceId?.takeIf { it.isNotBlank() }?.let { navController.navigate(Routes.chatRoom(it)) }
+                        "payment", "refund", "booking", "booking_created", "booking_confirmed" -> n.referenceId?.takeIf { it.isNotBlank() }?.let { navController.navigate(Routes.bookingDetail(it)) }
+                        "like", "comment" -> n.referenceId?.takeIf { it.isNotBlank() }?.let { navController.navigate(Routes.exploreDetail(it)) }
+                        else -> Unit
+                    }
+                },
             )
         }
         composable(Routes.FAVORITES) {

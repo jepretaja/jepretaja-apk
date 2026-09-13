@@ -89,8 +89,8 @@ fun CreatorProfileScreen(
     onLoginRequired: () -> Unit,
     authViewModel: AuthViewModel,
     onFollowList: (String, Int) -> Unit = { _, _ -> },
-    onCategoryClick: (String) -> Unit = {},
-    onPostClick: (String) -> Unit = {},
+    onCategoryClick: (String) -> Unit,
+    onPostClick: (String) -> Unit,
     viewModel: CreatorProfileViewModel = hiltViewModel(),
 ) {
     val creator by viewModel.creator.collectAsState()
@@ -287,6 +287,9 @@ fun CreatorProfileScreen(
 
                             Spacer(Modifier.height(14.dp))
                             BadgeStatusBooking(c)
+
+                            Spacer(Modifier.height(10.dp))
+                            TrustBadgeRow(c)
 
                             // Sinyal kepercayaan yang lebih menentukan daripada
                             // jumlah pengikut ketika yang dibeli adalah jasa.
@@ -570,6 +573,27 @@ private fun LencanaVerified() {
         Spacer(Modifier.width(4.dp))
         Text("Terverifikasi", style = MaterialTheme.typography.labelSmall, color = AppColors.Info)
     }
+}
+
+@Composable
+private fun TrustBadgeRow(creator: CreatorModel) {
+    val completion = if (creator.totalBookings == 0) 0 else (creator.completedBookings * 100 / creator.totalBookings).coerceIn(0, 100)
+    val badges = buildList {
+        if (creator.verified) add("Verified")
+        if (creator.rating >= 4.8 && creator.reviewCount >= 5) add("Highly Rated")
+        if ((creator.avgResponseMinutes ?: Int.MAX_VALUE) <= 60) add("Fast Responder")
+        if (creator.followerCount >= 100) add("Popular")
+        if (creator.totalBookings >= 50) add("Pro")
+        if (creator.totalBookings in 1..20) add("Rising")
+        if (completion >= 98) add("Top Creator")
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        badges.take(4).forEach { badge ->
+            AssistChip(onClick = {}, label = { Text(badge, style = MaterialTheme.typography.labelSmall) }, leadingIcon = { Icon(Icons.Default.Verified, null, modifier = Modifier.size(14.dp)) }, shape = RoundedCornerShape(percent = 50))
+        }
+    }
+    Spacer(Modifier.height(6.dp))
+    Text("${completion}% completion · ${creator.avgResponseMinutes?.let { "< ${durasiSingkat(it)} response" } ?: "Response time belum tersedia"}", style = MaterialTheme.typography.labelSmall, color = AppColors.TextSecondary)
 }
 
 /* --------------------------------------------------------------------------

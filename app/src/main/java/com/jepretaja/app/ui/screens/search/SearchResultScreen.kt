@@ -21,6 +21,8 @@ import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material.icons.filled.ImageSearch
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Star
@@ -45,6 +47,8 @@ import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.core.util.AppConstants
 import com.jepretaja.app.data.model.CreatorModel
 import com.jepretaja.app.data.model.ExplorePostModel
+import com.jepretaja.app.data.model.PackageModel
+import com.jepretaja.app.data.model.PortfolioModel
 import com.jepretaja.app.ui.components.AppTopBar
 import com.jepretaja.app.ui.components.CreatorCard
 import com.jepretaja.app.ui.components.EmptyState
@@ -78,7 +82,8 @@ fun SearchResultScreen(
     filters: SearchFilters,
     onBack: () -> Unit,
     onCreatorClick: (String) -> Unit,
-    onPostClick: (String) -> Unit = {},
+    onPostClick: (String) -> Unit,
+    onPackageClick: (String) -> Unit,
     viewModel: SearchResultViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -128,18 +133,20 @@ fun SearchResultScreen(
     val creators by remember(aktif, lat, lng) { viewModel.results(aktif, lat, lng) }
         .collectAsState(initial = null)
     val posts by remember(aktif) { viewModel.posts(aktif) }.collectAsState(initial = null)
+    val packages by remember(aktif) { viewModel.packages(aktif) }.collectAsState(initial = null)
+    val portfolios by remember(aktif) { viewModel.portfolios(aktif) }.collectAsState(initial = null)
 
     val kata = aktif.query?.trim().orEmpty()
     val kategoriCocok = remember(kata) {
         AppConstants.SERVICE_CATEGORIES.filter { kata.isBlank() || it.contains(kata, ignoreCase = true) }
     }
 
-    val sedangMemuat = creators == null || posts == null
+    val sedangMemuat = creators == null || posts == null || packages == null || portfolios == null
     // "Tidak ditemukan" yang sesungguhnya: tiga-tiganya kosong. Selama salah
     // satu tab masih punya isi, yang terjadi bukan pencarian gagal melainkan
     // hasilnya kebetulan ada di tab sebelah — dan itu pesan yang berbeda.
     val takAdaApaPun = !sedangMemuat &&
-        creators!!.isEmpty() && posts!!.isEmpty() && kategoriCocok.isEmpty()
+        creators!!.isEmpty() && posts!!.isEmpty() && packages!!.isEmpty() && portfolios!!.isEmpty() && kategoriCocok.isEmpty()
 
     Scaffold(
         topBar = {
@@ -262,23 +269,21 @@ fun SearchResultScreen(
                     TabHasil(
                         terpilih = tab == 0,
                         onClick = { tab = 0 },
-                        label = "Creator",
+                        label = "Photographers",
                         jumlah = creators?.size,
                         ikon = Icons.Default.PersonSearch,
                     )
                     TabHasil(
-                        terpilih = tab == 1,
-                        onClick = { tab = 1 },
-                        label = "Karya",
-                        jumlah = posts?.size,
-                        ikon = Icons.Default.PhotoLibrary,
+                        terpilih = tab == 1, onClick = { tab = 1 }, label = "Packages", jumlah = packages?.size, ikon = Icons.Default.Inventory2,
                     )
                     TabHasil(
-                        terpilih = tab == 2,
-                        onClick = { tab = 2 },
-                        label = "Kategori",
-                        jumlah = kategoriCocok.size,
-                        ikon = Icons.Default.Category,
+                        terpilih = tab == 2, onClick = { tab = 2 }, label = "Posts", jumlah = posts?.size, ikon = Icons.Default.PhotoLibrary,
+                    )
+                    TabHasil(
+                        terpilih = tab == 3, onClick = { tab = 3 }, label = "Portfolio", jumlah = portfolios?.size, ikon = Icons.Default.WorkspacePremium,
+                    )
+                    TabHasil(
+                        terpilih = tab == 4, onClick = { tab = 4 }, label = "Categories", jumlah = kategoriCocok.size, ikon = Icons.Default.Category,
                     )
                 }
 
@@ -288,8 +293,10 @@ fun SearchResultScreen(
                 Text(
                     text = when (tab) {
                         0 -> "Profil creator yang bisa langsung kamu pesan."
-                        1 -> "Foto & video hasil pemotretan. Ketuk untuk melihat karyanya."
-                        else -> "Telusuri berdasarkan jenis layanan."
+                        1 -> "Paket layanan creator yang tersedia untuk dibooking."
+                        2 -> "Foto dan video hasil pemotretan. Ketuk untuk melihat karya."
+                        3 -> "Album portfolio creator berdasarkan gaya dan kategori."
+                        else -> "Telusuri hasil berdasarkan jenis layanan."
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = AppColors.TextSecondary,
@@ -307,15 +314,25 @@ fun SearchResultScreen(
                         adaKarya = posts?.isNotEmpty() == true,
                         onCreatorClick = onCreatorClick,
                         onResetFilter = { aktif = aktif.direset() },
-                        onLihatKarya = { tab = 1 },
+                        onLihatKarya = { tab = 2 },
                     )
 
-                    1 -> TabKarya(
+                    1 -> TabPackage(
+                        packages = packages,
+                        onPackageClick = onPackageClick,
+                    )
+
+                    2 -> TabKarya(
                         posts = posts,
                         kata = kata,
                         adaCreator = creators?.isNotEmpty() == true,
                         onPostClick = onPostClick,
                         onLihatCreator = { tab = 0 },
+                    )
+
+                    3 -> TabPortfolio(
+                        portfolios = portfolios,
+                        onCreatorClick = onCreatorClick,
                     )
 
                     else -> LazyColumn(Modifier.weight(1f)) {
@@ -495,6 +512,71 @@ private fun ColumnScope.TabKarya(
             modifier = Modifier.weight(1f),
         ) {
             items(posts) { post -> UbinKarya(post = post, onClick = { onPostClick(post.postId) }) }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.TabPackage(
+    packages: List<PackageModel>?,
+    onPackageClick: (String) -> Unit,
+) {
+    when {
+        packages == null -> LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(5) { SkeletonCreatorCard(Modifier.fillMaxWidth().height(110.dp)) }
+        }
+        packages.isEmpty() -> KotakKosong {
+            EmptyState(icon = Icons.Default.Inventory2, title = "Belum ada package yang cocok", description = "Coba kata kunci atau rentang harga yang berbeda.")
+        }
+        else -> LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(packages, key = { it.packageId }) { pkg ->
+                Surface(
+                    onClick = { onPackageClick(pkg.packageId) },
+                    shape = RoundedCornerShape(16.dp),
+                    color = AppColors.Surface,
+                    tonalElevation = 2.dp,
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(pkg.name, style = MaterialTheme.typography.titleMedium, color = AppColors.TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Spacer(Modifier.height(4.dp))
+                            Text(pkg.description.ifBlank { "Paket layanan fotografi JepretAja" }, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Spacer(Modifier.height(8.dp))
+                            Text("Rp${pkg.price}", style = MaterialTheme.typography.titleSmall, color = AppColors.Primary)
+                        }
+                        Icon(Icons.Default.ChevronRight, contentDescription = "Buka package", tint = AppColors.TextSecondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.TabPortfolio(
+    portfolios: List<PortfolioModel>?,
+    onCreatorClick: (String) -> Unit,
+) {
+    when {
+        portfolios == null -> LazyVerticalGrid(columns = GridCells.Fixed(2), contentPadding = PaddingValues(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
+            items(6) { SkeletonPostTile(Modifier.fillMaxWidth()) }
+        }
+        portfolios.isEmpty() -> KotakKosong {
+            EmptyState(icon = Icons.Default.WorkspacePremium, title = "Belum ada portfolio yang cocok", description = "Coba cari berdasarkan kategori atau gaya fotografi.")
+        }
+        else -> LazyVerticalGrid(columns = GridCells.Fixed(2), contentPadding = PaddingValues(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
+            items(portfolios, key = { it.portfolioId }) { portfolio ->
+                val media = portfolio.thumbnailUrl ?: portfolio.media.firstOrNull()
+                Surface(onClick = { onCreatorClick(portfolio.creatorId) }, shape = RoundedCornerShape(14.dp), color = AppColors.Surface) {
+                    Column {
+                        AsyncImage(model = media, contentDescription = portfolio.title, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().aspectRatio(1.2f))
+                        Column(Modifier.padding(10.dp)) {
+                            Text(portfolio.title.ifBlank { "Portfolio creator" }, style = MaterialTheme.typography.titleSmall, color = AppColors.TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(portfolio.category.ifBlank { "Lihat creator" }, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+                        }
+                    }
+                }
+            }
         }
     }
 }

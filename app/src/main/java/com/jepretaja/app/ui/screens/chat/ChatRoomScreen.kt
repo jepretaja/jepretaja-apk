@@ -73,7 +73,7 @@ private val JAM = SimpleDateFormat("HH:mm", LOKAL_ID)
 fun ChatRoomScreen(
     chatId: String,
     authViewModel: AuthViewModel,
-    onBack: () -> Unit = {},
+    onBack: () -> Unit,
     viewModel: ChatRoomViewModel = hiltViewModel(),
 ) {
     val authState by authViewModel.uiState.collectAsState()

@@ -25,12 +25,25 @@ data class SearchFilters(
     val minPrice: Long? = null,
     val maxPrice: Long? = null,
     val verifiedOnly: Boolean = false,
+    val location: String? = null,
+    val maxDistanceKm: Double? = null,
+    val date: String? = null,
+    val availability: String? = null,
+    val photographyType: String? = null,
+    val style: String? = null,
+    val minExperienceBookings: Int? = null,
+    val maxResponseMinutes: Int? = null,
     val sort: SearchSort = SearchSort.RELEVAN,
 ) : Serializable {
 
     val hargaAktif: Boolean get() = minPrice != null || maxPrice != null
     val ratingAktif: Boolean get() = minRating != null
     val layananAktif: Boolean get() = categories.isNotEmpty()
+    val detailAktif: Boolean get() = listOf(
+        location != null, maxDistanceKm != null, date != null, availability != null,
+        photographyType != null, style != null, minExperienceBookings != null,
+        maxResponseMinutes != null,
+    ).any { it }
 
     /**
      * Berapa banyak KELOMPOK filter yang aktif — bukan berapa nilai yang dipilih.
@@ -45,7 +58,7 @@ data class SearchFilters(
      * mengira hasilnya sedang disaring padahal tidak.
      */
     val jumlahFilterAktif: Int
-        get() = listOf(hargaAktif, ratingAktif, layananAktif, verifiedOnly).count { it }
+        get() = listOf(hargaAktif, ratingAktif, layananAktif, verifiedOnly, detailAktif).count { it }
 
     val adaFilterAktif: Boolean get() = jumlahFilterAktif > 0
 

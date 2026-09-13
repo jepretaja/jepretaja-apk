@@ -94,6 +94,7 @@ fun PaymentScreen(
     val clipboard = LocalClipboardManager.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var metodePembayaran by remember { mutableStateOf("Bank transfer") }
 
     // Hitung mundur batas transfer. Tanggal mati yang diam ("bayar sebelum
     // 12:30") tidak memberi tahu apa pun tentang berapa waktu yang tersisa,
@@ -176,6 +177,21 @@ fun PaymentScreen(
                         kodeUnik = info?.uniqueCode,
                         jumlahTransfer = info?.transferAmount,
                     )
+                    Spacer(Modifier.height(14.dp))
+                }
+
+                if (status != StatusBayar.BERHASIL) {
+                    PremiumCard(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                        Text("Payment method", style = MaterialTheme.typography.titleMedium, color = AppColors.TextPrimary, fontWeight = FontWeight.W700)
+                        Spacer(Modifier.height(8.dp))
+                        listOf("Bank transfer", "E-wallet", "Card", "Other").forEach { pilihan ->
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                RadioButton(selected = metodePembayaran == pilihan, onClick = { metodePembayaran = pilihan })
+                                Text(pilihan, color = AppColors.TextPrimary)
+                            }
+                        }
+                        Text("Pembayaran diproses melalui jalur aman JepretAja.", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+                    }
                     Spacer(Modifier.height(14.dp))
                 }
 

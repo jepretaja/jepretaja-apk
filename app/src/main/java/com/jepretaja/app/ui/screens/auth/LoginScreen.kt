@@ -73,6 +73,13 @@ fun LoginScreen(
                 visualTransformation = PasswordVisualTransformation(), singleLine = true,
                 shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth(),
             )
+            if (password.isNotEmpty()) {
+                Text(
+                    if (password.length >= 8) "Password kuat" else "Password minimal 8 karakter",
+                    color = if (password.length >= 8) AppColors.Success else AppColors.Warning,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             error?.let { Spacer(Modifier.height(10.dp)); Text(it, color = AppColors.Danger, style = MaterialTheme.typography.bodySmall) }
             Spacer(Modifier.height(28.dp))
             BigPrimaryButton(

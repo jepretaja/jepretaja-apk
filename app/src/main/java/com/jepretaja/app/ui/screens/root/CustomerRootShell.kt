@@ -1,12 +1,17 @@
 package com.jepretaja.app.ui.screens.root
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -84,26 +89,12 @@ fun CustomerRootShell(
         if (tamu) mintaMasuk = FiturButuhAkun.NOTIFIKASI else outerNavController.navigate(Routes.NOTIFICATIONS)
     }
 
-    Scaffold(bottomBar = {
-        AppBottomNavBar(
-            tabs = mainTabs,
-            currentRoute = currentRoute,
-            onSelect = { route ->
-                if (route == "tab_inbox" && tamu) {
-                    mintaMasuk = FiturButuhAkun.CHAT
-                } else {
-                    innerNav.navigate(route) { popUpTo("tab_home") { saveState = true }; launchSingleTop = true; restoreState = true }
-                }
-            },
-            // Creator langsung masuk ke halaman upload; tidak perlu sheet perantara.
-            centerAction = if (authState.isCreator) {
-                { outerNavController.navigate(Routes.CREATOR_UPLOAD) }
-            } else {
-                null
-            },
-        )
-    }) { padding ->
-        NavHost(innerNav, startDestination = "tab_home", modifier = Modifier.padding(padding)) {
+    Box(Modifier.fillMaxSize()) {
+        NavHost(
+            innerNav,
+            startDestination = "tab_home",
+            modifier = Modifier.fillMaxSize().padding(bottom = 92.dp),
+        ) {
             composable("tab_home") {
                 HomeScreen(
                     onSearch = { outerNavController.navigate(Routes.SEARCH) },
@@ -169,6 +160,31 @@ fun CustomerRootShell(
                 )
             }
         }
+
+        // Explore memakai VerticalPager fullscreen. Bottom nav sengaja berada
+        // di layer teratas agar area sentuh menu tetap aktif di atas feed.
+        AppBottomNavBar(
+            tabs = mainTabs,
+            currentRoute = currentRoute,
+            onSelect = { route ->
+                if (route == "tab_inbox" && tamu) {
+                    mintaMasuk = FiturButuhAkun.CHAT
+                } else {
+                    innerNav.navigate(route) {
+                        popUpTo("tab_home") { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            },
+            modifier = Modifier.align(Alignment.BottomCenter).zIndex(20f),
+            // Creator langsung masuk ke halaman upload; tidak perlu sheet perantara.
+            centerAction = if (authState.isCreator) {
+                { outerNavController.navigate(Routes.CREATOR_UPLOAD) }
+            } else {
+                null
+            },
+        )
     }
 
     mintaMasuk?.let { fitur ->

@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,13 +42,14 @@ fun MyReportsScreen(
 ) {
     val authState by authViewModel.uiState.collectAsState()
     val myUid = authState.uid
+    var showReport by remember { mutableStateOf(false) }
 
     val scrollBehavior = rememberAppTopBarScrollBehavior()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = AppColors.Background,
-        topBar = { AppTopBar(title = "Laporan Saya", onBack = onBack, scrollBehavior = scrollBehavior) },
+        topBar = { AppTopBar(title = "Laporan Saya", onBack = onBack, scrollBehavior = scrollBehavior, actions = { IconButton(onClick = { showReport = true }) { Icon(Icons.Default.Add, "Buat laporan") } }) },
     ) { padding ->
         if (myUid == null) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -81,6 +83,42 @@ fun MyReportsScreen(
                     items(reports) { r -> ReportRow(r) }
                 }
             }
+        }
+    }
+    if (showReport && myUid != null) {
+        ReportSheet(
+            submitting = viewModel.submitting.collectAsState().value,
+            onDismiss = { showReport = false },
+            onSubmit = { type, target, reason -> viewModel.submit(myUid, type, target, reason); showReport = false },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReportSheet(submitting: Boolean, onDismiss: () -> Unit, onSubmit: (String, String, String) -> Unit) {
+    var targetType by remember { mutableStateOf("explore_post") }
+    var targetId by remember { mutableStateOf("") }
+    var reason by remember { mutableStateOf("spam") }
+    val reasons = listOf("spam" to "Spam", "scam" to "Scam", "harassment" to "Harassment", "fake_account" to "Fake account", "copyright" to "Copyright", "inappropriate_content" to "Inappropriate content", "payment_issue" to "Payment issue", "other" to "Other")
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(Modifier.padding(20.dp)) {
+            Text("Report", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(8.dp))
+            Text("What happened?", color = AppColors.TextSecondary)
+            Spacer(Modifier.height(10.dp))
+            OutlinedTextField(targetId, { targetId = it }, label = { Text("Object ID") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(10.dp))
+            Text("Target", style = MaterialTheme.typography.labelLarge)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = targetType == "explore_post", onClick = { targetType = "explore_post" }, label = { Text("Post") })
+                FilterChip(selected = targetType == "creator", onClick = { targetType = "creator" }, label = { Text("Creator") })
+            }
+            Spacer(Modifier.height(8.dp))
+            reasons.forEach { (value, label) -> Row(verticalAlignment = Alignment.CenterVertically) { RadioButton(reason == value, { reason = value }); Text(label) } }
+            Spacer(Modifier.height(12.dp))
+            Button(onClick = { onSubmit(targetType, targetId.trim(), reason) }, enabled = targetId.isNotBlank() && !submitting, modifier = Modifier.fillMaxWidth()) { Text(if (submitting) "Submitting..." else "Submit Report") }
+            Spacer(Modifier.height(20.dp))
         }
     }
 }

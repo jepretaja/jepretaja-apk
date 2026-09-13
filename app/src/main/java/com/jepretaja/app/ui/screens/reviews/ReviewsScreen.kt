@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,6 +56,7 @@ fun ReviewsScreen(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                item { RatingSummary(reviews) }
                 items(reviews) { review -> ReviewItem(review) }
             }
         }
@@ -76,6 +79,7 @@ private fun ReviewItem(review: ReviewModel) {
                 color = AppColors.TextPrimary,
                 modifier = Modifier.weight(1f),
             )
+            Text("Verified booking ✓", style = MaterialTheme.typography.labelSmall, color = AppColors.Success)
             review.createdAt?.let {
                 Text(Formatters.dateShort(it), style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
             }
@@ -92,10 +96,37 @@ private fun ReviewItem(review: ReviewModel) {
         }
         Spacer(Modifier.height(8.dp))
         Text(review.text, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextPrimary)
+        Text("Service: Photography session", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = {}) { Icon(Icons.Default.ThumbUp, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text("Helpful") }
+            TextButton(onClick = {}) { Icon(Icons.Default.Flag, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text("Report") }
+        }
         review.creatorReply?.let {
             Spacer(Modifier.height(10.dp))
             Box(Modifier.fillMaxWidth().background(AppColors.Background, MaterialTheme.shapes.medium).padding(12.dp)) {
                 Text("Balasan creator: $it", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RatingSummary(reviews: List<ReviewModel>) {
+    val average = reviews.map { it.rating }.average()
+    val total = reviews.size.toFloat().coerceAtLeast(1f)
+    PremiumCard(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("${"%.1f".format(average)} ★", style = MaterialTheme.typography.displaySmall, color = AppColors.TextPrimary)
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                (5 downTo 1).forEach { star ->
+                    val percent = reviews.count { it.rating.toInt() == star } / total
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("${"★".repeat(star)}${"☆".repeat(5 - star)}", style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(62.dp))
+                        LinearProgressIndicator(progress = { percent }, modifier = Modifier.weight(1f).height(6.dp))
+                        Text(" ${(percent * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = AppColors.TextSecondary)
+                    }
+                }
             }
         }
     }

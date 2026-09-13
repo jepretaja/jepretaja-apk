@@ -3,6 +3,7 @@ package com.jepretaja.app.ui.screens.search
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -11,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.NearMe
@@ -24,9 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jepretaja.app.core.theme.AppColors
+import com.jepretaja.app.core.util.AppConstants
 import com.jepretaja.app.ui.components.AppAvatar
 import com.jepretaja.app.ui.components.AppTopBar
 import com.jepretaja.app.ui.components.BigPrimaryButton
@@ -59,8 +63,8 @@ fun SearchScreen(
     onBack: () -> Unit,
     onSeeResults: (SearchFilters) -> Unit,
     onNearby: () -> Unit,
-    onTagClick: (String) -> Unit = {},
-    onCreatorClick: (String) -> Unit = {},
+    onTagClick: (String) -> Unit,
+    onCreatorClick: (String) -> Unit,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     var query by remember { mutableStateOf("") }
@@ -128,6 +132,54 @@ fun SearchScreen(
                 keyboardActions = KeyboardActions(onSearch = { cari(query) }),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
             )
+
+            if (history.isNotEmpty()) {
+                Spacer(Modifier.height(24.dp))
+                DiscoveryHeader("Pencarian terakhir")
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(history) { kata ->
+                        InputChip(
+                            selected = false,
+                            onClick = { query = kata; cari(kata) },
+                            label = { Text(kata, maxLines = 1) },
+                            shape = pill,
+                            leadingIcon = { Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(22.dp))
+            DiscoveryHeader("Pencarian populer")
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(listOf("Wedding", "Wisuda", "Event", "Prewedding")) { kata ->
+                    AssistChip(
+                        onClick = { query = kata; cari(kata) },
+                        label = { Text(kata) },
+                        shape = pill,
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(22.dp))
+            DiscoveryHeader("Kategori")
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                items(AppConstants.SERVICE_CATEGORIES) { kategori ->
+                    CategorySearchTile(kategori, onClick = {
+                        query = ""
+                        onSeeResults(SearchFilters(categories = listOf(kategori)))
+                    })
+                }
+            }
 
             Spacer(Modifier.height(14.dp))
 
@@ -234,46 +286,6 @@ fun SearchScreen(
                 }
             }
 
-            if (history.isNotEmpty()) {
-                Spacer(Modifier.height(20.dp))
-                Row(
-                    Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        "Pencarian Terakhir",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = AppColors.TextPrimary,
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(onClick = { viewModel.clear() }) { Text("Hapus semua") }
-                }
-                FlowRow(
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    history.forEach { kata ->
-                        InputChip(
-                            selected = false,
-                            onClick = { query = kata; cari(kata) },
-                            label = { Text(kata) },
-                            shape = pill,
-                            leadingIcon = {
-                                Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(16.dp))
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Hapus $kata dari riwayat",
-                                    modifier = Modifier.size(16.dp).clickable { viewModel.remove(kata) },
-                                )
-                            },
-                        )
-                    }
-                }
-            }
-
             // Discover: sesuatu untuk ditelusuri SEBELUM mengetik apa pun.
             // Kotak pencarian kosong yang hanya menunggu kata kunci menyerahkan
             // seluruh beban kepada pengguna yang belum tahu harus mencari apa.
@@ -332,6 +344,34 @@ fun SearchScreen(
                 sheetTerbuka = false
             },
         )
+    }
+}
+
+@Composable
+private fun DiscoveryHeader(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.titleMedium,
+        color = AppColors.TextPrimary,
+        modifier = Modifier.padding(horizontal = 20.dp),
+    )
+}
+
+@Composable
+private fun CategorySearchTile(label: String, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = AppColors.SurfaceVariant,
+    ) {
+        Column(
+            modifier = Modifier.width(92.dp).padding(vertical = 12.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(Icons.Default.Category, contentDescription = null, tint = AppColors.Primary, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.height(6.dp))
+            Text(label, style = MaterialTheme.typography.labelMedium, color = AppColors.TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }
 

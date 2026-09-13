@@ -152,10 +152,27 @@ fun CreatorDashboardScreen(
 
         val bookingBaru = bookings.count { it.status in CreatorDashboardViewModel.BARU }
         val bookingAktif = bookings.count { it.status in CreatorDashboardViewModel.AKTIF }
+            val bulanIni = bookings.filter { booking ->
+                booking.createdAt?.toDate()?.let { it.month == java.util.Date().month && it.year == java.util.Date().year } == true
+            }.sumOf { it.total }
+            val conversion = if ((creator?.profileViews ?: 0) == 0L) 0.0 else bookings.size * 100.0 / creator!!.profileViews
 
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState())) {
 
             Spacer(Modifier.height(4.dp))
+
+            SectionHeader("Good morning 👋", subtitle = "Ringkasan performa creator hari ini")
+            Spacer(Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                StatTile(Icons.Default.EventAvailable, "$bookingBaru", "Today's bookings", modifier = Modifier.weight(1f), tint = AppColors.Warning)
+                StatTile(Icons.Default.Payments, ringkasRupiah(bulanIni), "This month", modifier = Modifier.weight(1f), tint = AppColors.Success)
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                StatTile(Icons.Default.Visibility, ringkasAngka(creator?.profileViews ?: 0), "Profile views", modifier = Modifier.weight(1f), tint = AppColors.Info)
+                StatTile(Icons.Default.TrendingUp, "${"%.1f".format(conversion)}%", "Conversion", modifier = Modifier.weight(1f), tint = AppColors.Primary)
+                StatTile(Icons.Default.Star, if ((creator?.reviewCount ?: 0) == 0) "-" else "%.1f".format(creator?.rating ?: 0.0), "Rating", modifier = Modifier.weight(1f), tint = AppColors.Warning)
+            }
 
             PremiumCard(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),

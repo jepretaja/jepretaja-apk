@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,16 +42,22 @@ fun PaymentResultScreen(
                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AppColors.Success, modifier = Modifier.size(52.dp))
                 }
                 Spacer(Modifier.height(20.dp))
-                Text("Menunggu Verifikasi", style = MaterialTheme.typography.headlineSmall, color = AppColors.TextPrimary)
+                Text("Payment successful", style = MaterialTheme.typography.headlineSmall, color = AppColors.TextPrimary)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Transfer Anda akan dicek admin JepretAja. Booking dikonfirmasi setelah pembayaran terverifikasi, biasanya dalam beberapa jam kerja.",
+                    "Pembayaran untuk booking #${bookingId.take(8).uppercase()} berhasil diterima dan sedang diteruskan ke creator.",
                     textAlign = TextAlign.Center,
                     color = AppColors.TextSecondary,
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(Modifier.height(28.dp))
                 BigPrimaryButton(text = "Lihat Detail Booking", onClick = { onSeeBookingDetail(bookingId) })
+                Spacer(Modifier.height(4.dp))
+                OutlinedButton(onClick = { onSeeBookingDetail(bookingId) }, shape = androidx.compose.foundation.shape.RoundedCornerShape(percent = 50)) {
+                    Icon(Icons.Default.ReceiptLong, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Download Receipt")
+                }
                 Spacer(Modifier.height(4.dp))
                 TextButton(onClick = onBackToHome) { Text("Kembali ke Home") }
             }

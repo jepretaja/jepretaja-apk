@@ -78,6 +78,7 @@ fun CreatorWalletScreen(
     val authState by authViewModel.uiState.collectAsState()
     val uid = authState.uid
     var saring by remember { mutableStateOf(SaringTransaksi.SEMUA) }
+    var tabWallet by remember { mutableIntStateOf(0) }
 
     val scrollBehavior = rememberAppTopBarScrollBehavior()
 
@@ -159,6 +160,19 @@ fun CreatorWalletScreen(
                     nilai = Formatters.currency(wallet?.withdrawn ?: 0),
                     keterangan = "Total yang sudah dikirim ke rekeningmu.",
                 )
+            }
+
+            Spacer(Modifier.height(20.dp))
+            TabRow(selectedTabIndex = tabWallet, containerColor = AppColors.Background, contentColor = AppColors.Primary) {
+                listOf("Overview", "Transactions", "Withdrawals").forEachIndexed { index, label ->
+                    Tab(selected = tabWallet == index, onClick = {
+                        tabWallet = index
+                        saring = when (index) {
+                            2 -> SaringTransaksi.PENARIKAN
+                            else -> SaringTransaksi.SEMUA
+                        }
+                    }, text = { Text(label) })
+                }
             }
 
             Spacer(Modifier.height(26.dp))

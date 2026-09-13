@@ -12,6 +12,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.BookOnline
+import androidx.compose.material.icons.filled.Payment
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
@@ -50,6 +56,24 @@ fun HelpScreen(onBack: () -> Unit) {
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState())) {
             Spacer(Modifier.height(20.dp))
+            Text("How can we help?", style = MaterialTheme.typography.headlineSmall, color = AppColors.TextPrimary, modifier = Modifier.padding(horizontal = 20.dp))
+            var query by remember { mutableStateOf("") }
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(query, { query = it }, placeholder = { Text("Search help") }, leadingIcon = { Icon(Icons.Default.Search, null) }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp))
+            Spacer(Modifier.height(20.dp))
+            SectionHeader(title = "Browse by topic")
+            Spacer(Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HelpTopic(Icons.Default.BookOnline, "Booking")
+                HelpTopic(Icons.Default.Payment, "Payment")
+                HelpTopic(Icons.Default.Person, "Creator")
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HelpTopic(Icons.Default.Security, "Safety")
+                HelpTopic(Icons.Default.Build, "Technical")
+            }
+            Spacer(Modifier.height(24.dp))
             SectionHeader(title = "Pertanyaan Umum", subtitle = "Jawaban cepat untuk hal yang sering ditanyakan")
             Spacer(Modifier.height(12.dp))
             PremiumCard(
@@ -88,6 +112,15 @@ fun HelpScreen(onBack: () -> Unit) {
             }
             Spacer(Modifier.height(40.dp))
         }
+    }
+}
+
+@Composable
+private fun HelpTopic(icon: ImageVector, label: String) {
+    PremiumCard(modifier = Modifier.width(104.dp), elevation = 2.dp, contentPadding = PaddingValues(10.dp)) {
+        Icon(icon, null, tint = AppColors.Primary, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.height(6.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium, color = AppColors.TextPrimary)
     }
 }
 

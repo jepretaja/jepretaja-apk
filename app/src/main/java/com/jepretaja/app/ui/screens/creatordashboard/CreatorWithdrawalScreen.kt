@@ -346,6 +346,15 @@ fun CreatorWithdrawalScreen(
                             Spacer(Modifier.height(6.dp))
                             Text(it, style = MaterialTheme.typography.bodySmall, color = AppColors.Danger)
                         }
+                        if (w.status == "failed" && punyaRekening && !submitting) {
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = { viewModel.requestWithdrawal(uid, w.amount, namaBank, nomorRekening, namaPemilik) },
+                                shape = RoundedCornerShape(percent = 50),
+                            ) {
+                                Text("Ajukan ulang")
+                            }
+                        }
                     }
                 }
             }

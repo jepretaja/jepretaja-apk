@@ -8,9 +8,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
@@ -291,6 +295,93 @@ fun SearchFilterSheet(
                         checked = draf.verifiedOnly,
                         onCheckedChange = { draf = draf.copy(verifiedOnly = it) },
                     )
+                }
+
+                PemisahBagian()
+
+                JudulBagian("Lokasi & Jarak", Icons.Default.LocationOn)
+                Spacer(Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = draf.location.orEmpty(),
+                    onValueChange = { draf = draf.copy(location = it.ifBlank { null }) },
+                    label = { Text("Kota atau area") },
+                    placeholder = { Text("Contoh: Banda Aceh") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(10.dp))
+                Text("Jarak maksimal", style = MaterialTheme.typography.labelLarge, color = AppColors.TextSecondary)
+                Spacer(Modifier.height(6.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf(null, 5.0, 10.0, 25.0, 50.0).forEach { jarak ->
+                        ChipPilihan(
+                            label = jarak?.let { "${it.toInt()} km" } ?: "Semua",
+                            terpilih = draf.maxDistanceKm == jarak,
+                            onClick = { draf = draf.copy(maxDistanceKm = jarak) },
+                            ikon = if (jarak != null) Icons.Default.NearMe else null,
+                        )
+                    }
+                }
+
+                PemisahBagian()
+
+                JudulBagian("Tanggal & Ketersediaan", Icons.Default.CalendarMonth)
+                Spacer(Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = draf.date.orEmpty(),
+                    onValueChange = { draf = draf.copy(date = it.ifBlank { null }, availability = null) },
+                    label = { Text("Tanggal layanan (YYYY-MM-DD)") },
+                    placeholder = { Text("Contoh: 2026-10-12") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(10.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf(null to "Tanggal apa saja", "today" to "Tersedia hari ini", "weekend" to "Akhir pekan ini").forEach { (nilai, label) ->
+                        ChipPilihan(label = label, terpilih = draf.availability == nilai && draf.date == null, onClick = {
+                            draf = if (nilai == null) draf.copy(availability = null, date = null) else draf.copy(availability = nilai, date = null)
+                        })
+                    }
+                }
+
+                PemisahBagian()
+
+                JudulBagian("Jenis & Gaya Fotografi", Icons.Default.PhotoCamera)
+                Spacer(Modifier.height(10.dp))
+                Text("Jenis fotografi", style = MaterialTheme.typography.labelLarge, color = AppColors.TextSecondary)
+                Spacer(Modifier.height(6.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("Photo", "Video", "Both").forEach { jenis ->
+                        ChipPilihan(jenis, draf.photographyType == jenis, { draf = draf.copy(photographyType = if (draf.photographyType == jenis) null else jenis) })
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                Text("Gaya", style = MaterialTheme.typography.labelLarge, color = AppColors.TextSecondary)
+                Spacer(Modifier.height(6.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("Candid", "Editorial", "Cinematic", "Minimalist").forEach { gaya ->
+                        ChipPilihan(gaya, draf.style == gaya, { draf = draf.copy(style = if (draf.style == gaya) null else gaya) })
+                    }
+                }
+
+                PemisahBagian()
+
+                JudulBagian("Pengalaman & Respons", Icons.Default.Schedule)
+                Spacer(Modifier.height(10.dp))
+                Text("Pengalaman minimum", style = MaterialTheme.typography.labelLarge, color = AppColors.TextSecondary)
+                Spacer(Modifier.height(6.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf(null to "Semua", 10 to "10+ booking", 25 to "25+ booking", 50 to "50+ booking").forEach { (nilai, label) ->
+                        ChipPilihan(label, draf.minExperienceBookings == nilai, { draf = draf.copy(minExperienceBookings = nilai) })
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                Text("Waktu respons maksimal", style = MaterialTheme.typography.labelLarge, color = AppColors.TextSecondary)
+                Spacer(Modifier.height(6.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf(null to "Semua", 30 to "< 30 menit", 60 to "< 1 jam", 240 to "< 4 jam").forEach { (nilai, label) ->
+                        ChipPilihan(label, draf.maxResponseMinutes == nilai, { draf = draf.copy(maxResponseMinutes = nilai) })
+                    }
                 }
                 Spacer(Modifier.height(8.dp))
             }

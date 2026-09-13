@@ -28,7 +28,7 @@ enum class LangkahBooking(val nomor: Int, val judul: String) {
     LAYANAN(1, "Layanan"),
     JADWAL(2, "Jadwal"),
     DETAIL(3, "Detail"),
-    KONFIRMASI(4, "Konfirmasi"),
+    KONFIRMASI(4, "Payment"),
 }
 
 data class BookingFormState(

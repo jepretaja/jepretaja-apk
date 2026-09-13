@@ -95,7 +95,7 @@ class BookingDetailViewModel @Inject constructor(
     fun confirmBooking(bookingId: String) = runAction { bookingRepository.confirmBooking(bookingId) }
     fun markServiceCompleted(bookingId: String) = runAction { bookingRepository.markServiceCompleted(bookingId) }
     fun confirmCompletion(bookingId: String) = runAction { bookingRepository.confirmCompletion(bookingId) }
-    fun cancelBooking(bookingId: String) = runAction { bookingRepository.cancelBooking(bookingId) }
+    fun cancelBooking(bookingId: String, reason: String? = null) = runAction { bookingRepository.cancelBooking(bookingId, reason) }
     fun openDispute(bookingId: String, reason: String) = runAction { bookingRepository.openDispute(bookingId, reason) }
 
     suspend fun openChat(bookingId: String, customerId: String, creatorId: String, packageName: String): String =
