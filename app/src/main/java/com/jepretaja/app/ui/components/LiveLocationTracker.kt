@@ -21,6 +21,8 @@ fun LiveLocationTracker(
     bookingId: String,
     userId: String,
     role: String,
+    targetLatitude: Double? = null,
+    targetLongitude: Double? = null,
     enabled: Boolean,
 ) {
     val context = LocalContext.current
@@ -36,6 +38,8 @@ fun LiveLocationTracker(
                 putExtra(LiveLocationForegroundService.EXTRA_BOOKING_ID, bookingId)
                 putExtra(LiveLocationForegroundService.EXTRA_USER_ID, userId)
                 putExtra(LiveLocationForegroundService.EXTRA_ROLE, role)
+                targetLatitude?.let { putExtra(LiveLocationForegroundService.EXTRA_TARGET_LATITUDE, it) }
+                targetLongitude?.let { putExtra(LiveLocationForegroundService.EXTRA_TARGET_LONGITUDE, it) }
             }
             ContextCompat.startForegroundService(context, serviceIntent)
         } else if (!enabled) {

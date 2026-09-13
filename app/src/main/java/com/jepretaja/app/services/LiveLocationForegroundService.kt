@@ -37,6 +37,9 @@ class LiveLocationForegroundService : Service() {
         val bookingId = intent?.getStringExtra(EXTRA_BOOKING_ID).orEmpty()
         val userId = intent?.getStringExtra(EXTRA_USER_ID).orEmpty()
         val role = intent?.getStringExtra(EXTRA_ROLE).orEmpty()
+        val targetLatitude = intent?.getDoubleExtra(EXTRA_TARGET_LATITUDE, Double.NaN) ?: Double.NaN
+        val targetLongitude = intent?.getDoubleExtra(EXTRA_TARGET_LONGITUDE, Double.NaN) ?: Double.NaN
+        val target = if (targetLatitude.isFinite() && targetLongitude.isFinite()) LatLng(targetLatitude, targetLongitude) else null
         if (bookingId.isBlank() || userId.isBlank() || role.isBlank()) {
             stopSelf()
             return START_NOT_STICKY
@@ -51,7 +54,7 @@ class LiveLocationForegroundService : Service() {
             override fun onLocationResult(result: LocationResult) {
                 result.lastLocation?.let { location ->
                     scope.launch {
-                        runCatching { repository.publish(bookingId, userId, role, LatLng(location.latitude, location.longitude)) }
+                        runCatching { repository.publish(bookingId, userId, role, LatLng(location.latitude, location.longitude), target) }
                     }
                 }
             }
@@ -88,6 +91,8 @@ class LiveLocationForegroundService : Service() {
         const val EXTRA_BOOKING_ID = "bookingId"
         const val EXTRA_USER_ID = "userId"
         const val EXTRA_ROLE = "role"
+        const val EXTRA_TARGET_LATITUDE = "targetLatitude"
+        const val EXTRA_TARGET_LONGITUDE = "targetLongitude"
         private const val CHANNEL_ID = "live_location"
         private const val NOTIFICATION_ID = 4101
     }

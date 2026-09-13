@@ -29,6 +29,8 @@ import com.jepretaja.app.ui.components.EmptyState
 import com.jepretaja.app.ui.components.ErrorState
 import com.jepretaja.app.ui.components.InfoRow
 import com.jepretaja.app.ui.components.LiveLocationTracker
+import com.jepretaja.app.data.repository.LiveLocationRepository
+import com.google.firebase.firestore.FirebaseFirestore
 import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.components.SectionHeader
 import com.jepretaja.app.ui.components.SkeletonBox
@@ -67,9 +69,12 @@ fun BookingDetailScreen(
     var showCancelConfirm by remember { mutableStateOf(false) }
     var cancelReason by remember { mutableStateOf("change_of_plans") }
     var showCompleteConfirm by remember { mutableStateOf(false) }
+    var sosBusy by remember { mutableStateOf(false) }
+    var sosSent by remember { mutableStateOf(false) }
 
     val payment by viewModel.payment.collectAsState()
     val context = LocalContext.current
+    val liveLocationRepository = remember { LiveLocationRepository(FirebaseFirestore.getInstance()) }
     var aksiSlip by remember { mutableStateOf<BookingSlipAction?>(null) }
     var slipSibuk by remember { mutableStateOf(false) }
 
@@ -161,6 +166,8 @@ fun BookingDetailScreen(
                         bookingId = b.bookingId,
                         userId = myUid,
                         role = if (isCreator) "creator" else "customer",
+                        targetLatitude = b.latitude,
+                        targetLongitude = b.longitude,
                         enabled = b.status == BookingStatus.IN_PROGRESS,
                     )
                 }
@@ -269,6 +276,27 @@ fun BookingDetailScreen(
                             }
                             if (isCustomer && b.status in listOf(BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED)) {
                                 ActionButton("Buka Dispute", Icons.Default.Report, actionLoading, danger = true) { showDisputeSheet = true }
+                            }
+                            if ((isCustomer || isCreator) && b.status == BookingStatus.IN_PROGRESS && !sosSent) {
+                                ActionButton("SOS / Hubungi Support", Icons.Default.Emergency, sosBusy, danger = true) {
+                                    sosBusy = true
+                                    scope.launch {
+                                        runCatching {
+                                            liveLocationRepository.raiseSos(
+                                                b.bookingId,
+                                                myUid.orEmpty(),
+                                                if (isCreator) "creator" else "customer",
+                                                "Permintaan bantuan darurat dari halaman perjalanan.",
+                                            )
+                                        }.onSuccess {
+                                            sosSent = true
+                                            snackbarHostState.showSnackbar("SOS terkirim ke support.")
+                                        }.onFailure {
+                                            snackbarHostState.showSnackbar("SOS gagal dikirim. Coba lagi.")
+                                        }
+                                        sosBusy = false
+                                    }
+                                }
                             }
                             // Menulis ulasan baru masuk akal setelah pekerjaan
                             // benar-benar rampung — dan sebelumnya tidak ada

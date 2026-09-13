@@ -35,6 +35,8 @@ object FirestorePaths {
     const val AVAILABILITY_BLOCKS = "availability_blocks"
     const val BLOCKED_USERS = "blocked_users"
     const val LIVE_LOCATIONS = "live_locations"
+    const val LOCATION_TRACKS = "location_tracks"
+    const val SUPPORT_ALERTS = "support_alerts"
 }
 
 /** Nama aksi server — HARUS sinkron persis dengan kunci object HANDLERS di
