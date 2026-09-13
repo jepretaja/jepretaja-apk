@@ -54,7 +54,7 @@ class ApiClient @Inject constructor(
             // orang lain hanya dengan mengganti satu field.
             val user = auth.currentUser
                 ?: throw ApiException("unauthenticated", "Anda harus masuk terlebih dahulu.")
-            val token = try {
+            var token = try {
                 // Booking/preview berjalan lewat Vercel dan harus menerima
                 // token Firebase terbaru. Token cache yang sudah mendekati
                 // kedaluwarsa sebelumnya membuat form berhenti di error 401.
@@ -68,22 +68,38 @@ class ApiClient @Inject constructor(
                 payload.forEach { (k, v) -> put(k, toJsonValue(v)) }
             }
 
-            val conn = (URL("$base/api/app").openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                doOutput = true
-                connectTimeout = 20_000
-                readTimeout = 30_000
-                setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                setRequestProperty("Authorization", "Bearer $token")
+            var kode = 0
+            var teks = ""
+            repeat(2) { attempt ->
+                val conn = (URL("$base/api/app").openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    doOutput = true
+                    connectTimeout = 20_000
+                    readTimeout = 30_000
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    setRequestProperty("Authorization", "Bearer $token")
+                }
+                try {
+                    conn.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+                    kode = conn.responseCode
+                    teks = (if (kode in 200..299) conn.inputStream else conn.errorStream)
+                        ?.bufferedReader()?.use { it.readText() }.orEmpty()
+                } finally {
+                    conn.disconnect()
+                }
+
+                if (kode == HttpURLConnection.HTTP_UNAUTHORIZED && attempt == 0) {
+                    token = try {
+                        user.getIdToken(true).await().token
+                    } catch (e: Exception) {
+                        null
+                    } ?: throw ApiException("unauthenticated", "Sesi Anda berakhir. Masuk kembali untuk melanjutkan.")
+                } else {
+                    return@repeat
+                }
             }
 
             try {
-                conn.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
-
-                val kode = conn.responseCode
-                val teks = (if (kode in 200..299) conn.inputStream else conn.errorStream)
-                    ?.bufferedReader()?.use { it.readText() }.orEmpty()
-
                 if (teks.isBlank()) {
                     throw ApiException("internal", "Server tidak memberi balasan. Coba lagi.")
                 }
@@ -109,8 +125,6 @@ class ApiClient @Inject constructor(
                 throw ApiException("network", "Tidak ada koneksi internet. Periksa jaringan Anda lalu coba lagi.")
             } catch (e: IOException) {
                 throw ApiException("network", "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.")
-            } finally {
-                conn.disconnect()
             }
         }
 
