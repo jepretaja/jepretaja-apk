@@ -2,6 +2,8 @@ package com.jepretaja.app.ui.screens.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -10,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,13 +52,25 @@ fun RegisterCreatorScreen(
             Modifier.padding(padding).padding(horizontal = 24.dp).fillMaxWidth().verticalScroll(rememberScrollState()),
         ) {
             Spacer(Modifier.height(12.dp))
-            Text("Bergabung Sebagai Creator", style = MaterialTheme.typography.displaySmall, color = AppColors.TextPrimary)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(52.dp).clip(RoundedCornerShape(16.dp)).background(AppColors.PrimarySoft),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AppColors.Primary, modifier = Modifier.size(27.dp)) }
+                Spacer(Modifier.width(14.dp))
+                Column {
+                    Text("Bergabung Sebagai Creator", style = MaterialTheme.typography.headlineMedium, color = AppColors.TextPrimary)
+                    Text("Bangun profil profesionalmu", style = MaterialTheme.typography.labelMedium, color = AppColors.Primary)
+                }
+            }
             Spacer(Modifier.height(6.dp))
             Text(
                 "Tampilkan portofoliomu dan mulai menerima booking dari klien di kotamu.",
                 style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary,
             )
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(22.dp))
+            Text("Profil awal", style = MaterialTheme.typography.titleMedium, color = AppColors.TextPrimary)
+            Spacer(Modifier.height(10.dp))
             OutlinedTextField(name, { name = it }, label = { Text("Nama / Nama Studio") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(14.dp))
             OutlinedTextField(email, { email = it }, label = { Text("Email") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
@@ -101,7 +117,6 @@ fun RegisterCreatorScreen(
                 }
             }
             error?.let { Spacer(Modifier.height(10.dp)); Text(it, color = AppColors.Danger, style = MaterialTheme.typography.bodySmall) }
-            Spacer(Modifier.height(28.dp))
             BigPrimaryButton(
                 text = if (loading) "Memproses..." else "Daftar sebagai Creator",
                 loading = loading,
