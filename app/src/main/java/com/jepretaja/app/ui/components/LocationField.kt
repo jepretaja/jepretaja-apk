@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.core.util.GeocoderHelper
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.jepretaja.app.ui.components.LocationPickerMap
 
 /**
  * Kolom alamat dengan DUA cara pengisian sekaligus.
@@ -46,11 +48,15 @@ fun LocationField(
     placeholder: String = "Ketik alamat, atau ambil otomatis",
     isError: Boolean = false,
     errorText: String? = null,
+    onLocationSelected: (latitude: Double, longitude: Double) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var mencari by remember { mutableStateOf(false) }
     var pesan by remember { mutableStateOf<String?>(null) }
+    var showMap by remember { mutableStateOf(false) }
+    var mapLatitude by remember { mutableStateOf(-6.200000) }
+    var mapLongitude by remember { mutableStateOf(106.816666) }
 
     val fused = remember { LocationServices.getFusedLocationProviderClient(context) }
 
@@ -136,6 +142,17 @@ fun LocationField(
             }
         }
 
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(
+            onClick = { showMap = true },
+            shape = RoundedCornerShape(percent = 50),
+            modifier = Modifier.height(42.dp),
+        ) {
+            Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Pilih di peta satelit", style = MaterialTheme.typography.labelLarge)
+        }
+
         pesan?.let {
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -146,5 +163,30 @@ fun LocationField(
                 )
             }
         }
+    }
+
+    if (showMap) {
+        AlertDialog(
+            onDismissRequest = { showMap = false },
+            title = { Text("Pilih lokasi") },
+            text = {
+                LocationPickerMap(
+                    latitude = mapLatitude,
+                    longitude = mapLongitude,
+                    onLocationChanged = { latitude, longitude ->
+                        mapLatitude = latitude
+                        mapLongitude = longitude
+                        onLocationSelected(latitude, longitude)
+                        scope.launch {
+                            GeocoderHelper.alamatDari(context, latitude, longitude)?.let(onValueChange)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(360.dp),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showMap = false }) { Text("Gunakan lokasi") }
+            },
+        )
     }
 }

@@ -54,12 +54,14 @@ class BookingRepository @Inject constructor(
 ) {
     suspend fun createBooking(
         packageId: String, date: String, time: String, location: String, note: String?,
+        latitude: Double? = null, longitude: Double? = null,
         addOnIds: List<String> = emptyList(), travelFee: Long = 0, voucherCode: String? = null,
     ): Map<String, Any?> {
         return api.call(
             CloudFunctions.CREATE_BOOKING,
             mapOf(
                 "packageId" to packageId, "date" to date, "time" to time, "location" to location,
+                "latitude" to latitude, "longitude" to longitude,
                 "note" to note, "addOnIds" to addOnIds, "travelFee" to travelFee, "voucherCode" to voucherCode,
             )
         )

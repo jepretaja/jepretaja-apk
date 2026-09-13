@@ -45,13 +45,14 @@ class AuthRepository @Inject constructor(
         syncFcmToken()
     }
 
-    suspend fun registerCustomer(name: String, email: String, password: String, phone: String?) {
+    suspend fun registerCustomer(name: String, email: String, password: String, phone: String?, address: String?, city: String?, province: String?) {
         val cred = auth.createUserWithEmailAndPassword(email, password).await()
         val uid = cred.user!!.uid
         try {
             db.collection(FirestorePaths.USERS).document(uid).set(
                 mapOf(
                     "userId" to uid, "name" to name, "email" to email, "phone" to phone,
+                    "address" to address, "city" to city, "province" to province,
                     "role" to "customer", "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
                 )
             ).await()
@@ -63,7 +64,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun registerCreator(name: String, email: String, password: String, city: String, phone: String?) {
+    suspend fun registerCreator(name: String, email: String, password: String, city: String, phone: String?, address: String?, province: String?) {
         val cred = auth.createUserWithEmailAndPassword(email, password).await()
         val uid = cred.user!!.uid
         try {
@@ -72,6 +73,7 @@ class AuthRepository @Inject constructor(
                 db.collection(FirestorePaths.USERS).document(uid),
                 mapOf(
                     "userId" to uid, "name" to name, "email" to email, "phone" to phone,
+                    "address" to address, "city" to city, "province" to province,
                     "role" to "creator", "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
                 )
             )

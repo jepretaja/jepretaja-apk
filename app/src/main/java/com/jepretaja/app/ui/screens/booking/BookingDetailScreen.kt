@@ -28,6 +28,7 @@ import com.jepretaja.app.ui.components.AppTopBar
 import com.jepretaja.app.ui.components.EmptyState
 import com.jepretaja.app.ui.components.ErrorState
 import com.jepretaja.app.ui.components.InfoRow
+import com.jepretaja.app.ui.components.LiveLocationTracker
 import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.components.SectionHeader
 import com.jepretaja.app.ui.components.SkeletonBox
@@ -154,6 +155,15 @@ fun BookingDetailScreen(
                 val b = booking!!
                 val isCreator = b.creatorId == myUid
                 val isCustomer = b.customerId == myUid
+
+                if (myUid != null && (isCreator || isCustomer)) {
+                    LiveLocationTracker(
+                        bookingId = b.bookingId,
+                        userId = myUid,
+                        role = if (isCreator) "creator" else "customer",
+                        enabled = b.status == BookingStatus.IN_PROGRESS,
+                    )
+                }
 
                 LazyColumn(Modifier.padding(padding).padding(vertical = 20.dp)) {
                     item {

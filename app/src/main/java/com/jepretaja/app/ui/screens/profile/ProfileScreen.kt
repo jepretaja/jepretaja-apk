@@ -78,6 +78,7 @@ private enum class KoleksiKarya(val judul: String) { MILIKKU("Karya saya"), TERS
 @Composable
 fun ProfileScreen(
     onLogin: () -> Unit,
+    onRegister: () -> Unit,
     onMyBookings: () -> Unit,
     onFavorites: () -> Unit,
     onMyReviews: () -> Unit,
@@ -102,6 +103,7 @@ fun ProfileScreen(
 ) {
     ModernProfileScreen(
         onLogin = onLogin,
+        onRegister = onRegister,
         onMyBookings = onMyBookings,
         onFavorites = onFavorites,
         onMyReviews = onMyReviews,
@@ -195,7 +197,7 @@ fun ProfileScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         if (!authState.isLoggedIn) {
-            GuestProfile(modifier = Modifier.padding(padding), onLogin = onLogin)
+            GuestProfile(modifier = Modifier.padding(padding), onLogin = onLogin, onRegister = onRegister)
             return@Scaffold
         }
 
@@ -1141,13 +1143,10 @@ private fun BarisData(
 /**
  * Profil untuk pengunjung yang belum masuk.
  *
- * HANYA menawarkan Masuk. Pendaftaran sengaja tidak ada di sini: akun dibuat
- * lewat layar pemilihan akses saat pertama membuka aplikasi, karena di sana
- * pengguna bisa memilih daftar sebagai konsumen atau creator — pilihan yang
- * tidak bisa diwakili satu tombol "Daftar" di halaman profil.
+ * Menawarkan Masuk dan Daftar agar tamu bisa membuat akun langsung dari profil.
  */
 @Composable
-private fun GuestProfile(modifier: Modifier = Modifier, onLogin: () -> Unit) {
+private fun GuestProfile(modifier: Modifier = Modifier, onLogin: () -> Unit, onRegister: () -> Unit) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             Modifier.padding(32.dp),
@@ -1178,6 +1177,12 @@ private fun GuestProfile(modifier: Modifier = Modifier, onLogin: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary, contentColor = AppColors.OnPrimary),
                 modifier = Modifier.fillMaxWidth().height(48.dp),
             ) { Text("Masuk") }
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = onRegister,
+                shape = RoundedCornerShape(percent = 50),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+            ) { Text("Daftar") }
         }
     }
 }

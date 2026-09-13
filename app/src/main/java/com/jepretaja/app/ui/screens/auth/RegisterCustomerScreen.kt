@@ -24,6 +24,9 @@ fun RegisterCustomerScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
+    var province by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -51,6 +54,12 @@ fun RegisterCustomerScreen(
             Spacer(Modifier.height(14.dp))
             OutlinedTextField(phone, { phone = it }, label = { Text("No. HP") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(14.dp))
+            OutlinedTextField(address, { address = it }, label = { Text("Alamat Lengkap") }, minLines = 2, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(14.dp))
+            OutlinedTextField(city, { city = it }, label = { Text("Kota") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(14.dp))
+            OutlinedTextField(province, { province = it }, label = { Text("Provinsi") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(14.dp))
             OutlinedTextField(
                 password, { password = it }, label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(), singleLine = true,
@@ -64,7 +73,7 @@ fun RegisterCustomerScreen(
                 enabled = !loading,
                 onClick = {
                     loading = true; error = null
-                    viewModel.registerCustomer(name.trim(), email.trim(), password, phone.trim(), onSuccess = { loading = false; onSuccess() }, onError = { loading = false; error = it })
+                    viewModel.registerCustomer(name.trim(), email.trim(), password, phone.trim(), address.trim(), city.trim(), province.trim(), onSuccess = { loading = false; onSuccess() }, onError = { loading = false; error = it })
                 },
             )
             Spacer(Modifier.height(24.dp))

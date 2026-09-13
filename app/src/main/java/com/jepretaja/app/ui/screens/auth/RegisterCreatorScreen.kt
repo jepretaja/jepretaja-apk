@@ -31,6 +31,8 @@ fun RegisterCreatorScreen(
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
+    var province by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -70,6 +72,10 @@ fun RegisterCreatorScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(14.dp))
+            OutlinedTextField(address, { address = it }, label = { Text("Alamat Studio / Domisili") }, minLines = 2, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(14.dp))
+            OutlinedTextField(province, { province = it }, label = { Text("Provinsi") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(14.dp))
             OutlinedTextField(
                 password, { password = it }, label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(), singleLine = true,
@@ -102,7 +108,7 @@ fun RegisterCreatorScreen(
                 enabled = !loading && termsAccepted && password.length >= 8,
                 onClick = {
                     loading = true; error = null
-                    viewModel.registerCreator(name.trim(), email.trim(), password, city.trim(), phone.trim(), onSuccess = { loading = false; onSuccess() }, onError = { loading = false; error = it })
+                    viewModel.registerCreator(name.trim(), email.trim(), password, city.trim(), phone.trim(), address.trim(), province.trim(), onSuccess = { loading = false; onSuccess() }, onError = { loading = false; error = it })
                 },
             )
             Spacer(Modifier.height(24.dp))

@@ -47,6 +47,8 @@ data class BookingModel(
     val date: Timestamp? = null,
     val time: String = "",
     val location: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val note: String? = null,
     val total: Long = 0,
     val priceBreakdown: PriceBreakdown? = null,

@@ -135,6 +135,7 @@ fun CustomerRootShell(
             composable("tab_profile") {
                 ProfileScreen(
                     onLogin = { outerNavController.navigate(Routes.LOGIN) },
+                    onRegister = { outerNavController.navigate(Routes.REGISTER_CUSTOMER) },
                     onSettings = { outerNavController.navigate(Routes.SETTINGS) },
                     onEditProfile = { outerNavController.navigate(Routes.EDIT_PROFILE) },
                     onSaved = { outerNavController.navigate(Routes.SAVED_POSTS) },
@@ -167,14 +168,10 @@ fun CustomerRootShell(
             tabs = mainTabs,
             currentRoute = currentRoute,
             onSelect = { route ->
-                if (route == "tab_inbox" && tamu) {
-                    mintaMasuk = FiturButuhAkun.CHAT
-                } else {
-                    innerNav.navigate(route) {
-                        popUpTo("tab_home") { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                innerNav.navigate(route) {
+                    popUpTo("tab_home") { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
                 }
             },
             modifier = Modifier.align(Alignment.BottomCenter).zIndex(20f),

@@ -66,6 +66,7 @@ private enum class ProfileCollection(val label: String) {
 @Composable
 fun ModernProfileScreen(
     onLogin: () -> Unit,
+    onRegister: () -> Unit,
     onMyBookings: () -> Unit,
     onFavorites: () -> Unit,
     onMyReviews: () -> Unit,
@@ -112,7 +113,7 @@ fun ModernProfileScreen(
 
     Scaffold(containerColor = AppColors.Background) { padding ->
         if (!authState.isLoggedIn) {
-            GuestProfileModern(modifier = Modifier.padding(padding), onLogin = onLogin)
+            GuestProfileModern(modifier = Modifier.padding(padding), onLogin = onLogin, onRegister = onRegister)
             return@Scaffold
         }
 
@@ -297,7 +298,7 @@ private fun RowScope.ProfileMetric(value: String, label: String) {
 }
 
 @Composable
-private fun GuestProfileModern(modifier: Modifier, onLogin: () -> Unit) {
+private fun GuestProfileModern(modifier: Modifier, onLogin: () -> Unit, onRegister: () -> Unit) {
     Column(modifier.fillMaxSize().padding(AppSpacing.xxl), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         AppAvatar(url = null, name = "?", size = 76.dp)
         Spacer(Modifier.height(AppSpacing.lg))
@@ -306,6 +307,8 @@ private fun GuestProfileModern(modifier: Modifier, onLogin: () -> Unit) {
         Text("Simpan karya, ikuti creator, dan lihat aktivitas booking kamu.", style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary, textAlign = TextAlign.Center)
         Spacer(Modifier.height(AppSpacing.lg))
         Button(onClick = onLogin, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth().height(50.dp)) { Text("Masuk") }
+        Spacer(Modifier.height(AppSpacing.sm))
+        OutlinedButton(onClick = onRegister, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth().height(50.dp)) { Text("Daftar") }
     }
 }
 

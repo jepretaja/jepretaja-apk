@@ -446,6 +446,8 @@ fun JepretAjaNavGraph(
         composable(Routes.CHAT_LIST) {
             ChatListScreen(
                 onChatClick = { chatId -> navController.navigate(Routes.chatRoom(chatId)) },
+                onLogin = { navController.navigate(Routes.LOGIN) },
+                onRegister = { navController.navigate(Routes.REGISTER_CUSTOMER) },
                 authViewModel = authViewModel,
             )
         }

@@ -38,6 +38,8 @@ data class BookingFormState(
     val date: LocalDate? = null,
     val time: String? = null,
     val location: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val note: String = "",
     val travelFee: String = "0",
     val voucherCode: String = "",
@@ -295,6 +297,9 @@ class BookingFormViewModel @Inject constructor(
     fun setLocation(v: String) {
         _state.value = _state.value.copy(location = v, disentuh = _state.value.disentuh + BidangForm.LOKASI)
     }
+    fun setLocationCoordinates(latitude: Double, longitude: Double) {
+        _state.value = _state.value.copy(latitude = latitude, longitude = longitude)
+    }
     fun setNote(v: String) { _state.value = _state.value.copy(note = v) }
     /** Angka saja — "Rp 50.000" yang diketik apa adanya sebelumnya jatuh ke
      * `toLongOrNull() ?: 0` dan biaya perjalanannya hilang tanpa pemberitahuan. */
@@ -365,6 +370,8 @@ class BookingFormViewModel @Inject constructor(
                     date = s.date.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toString(),
                     time = s.time,
                     location = s.location.trim(),
+                    latitude = s.latitude,
+                    longitude = s.longitude,
                     note = s.note.ifBlank { null },
                     addOnIds = s.selectedAddOnIds.toList(),
                     travelFee = s.travelFee.toLongOrNull() ?: 0,

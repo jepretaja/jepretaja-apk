@@ -151,6 +151,7 @@ fun BookingFormScreen(
                     LangkahBooking.DETAIL -> LangkahDetail(
                         state = state,
                         onLokasi = viewModel::setLocation,
+                        onLocationSelected = viewModel::setLocationCoordinates,
                         onCatatan = viewModel::setNote,
                         onBiayaJalan = viewModel::setTravelFee,
                     )
@@ -424,6 +425,7 @@ private fun BarisPilih(
 private fun LangkahDetail(
     state: BookingFormState,
     onLokasi: (String) -> Unit,
+    onLocationSelected: (Double, Double) -> Unit,
     onCatatan: (String) -> Unit,
     onBiayaJalan: (String) -> Unit,
 ) {
@@ -433,6 +435,7 @@ private fun LangkahDetail(
         LocationField(
             value = state.location,
             onValueChange = onLokasi,
+            onLocationSelected = onLocationSelected,
             isError = galatLokasi != null,
             errorText = galatLokasi,
             modifier = Modifier.fillMaxWidth(),

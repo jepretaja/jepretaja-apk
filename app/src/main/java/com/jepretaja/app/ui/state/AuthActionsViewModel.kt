@@ -30,10 +30,10 @@ class AuthActionsViewModel @Inject constructor(
         }
     }
 
-    fun registerCustomer(name: String, email: String, password: String, phone: String?, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun registerCustomer(name: String, email: String, password: String, phone: String?, address: String?, city: String?, province: String?, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                authRepository.registerCustomer(name, email, password, phone)
+                authRepository.registerCustomer(name, email, password, phone, address, city, province)
                 onSuccess()
             } catch (e: Exception) {
                 onError(e.message ?: "Registrasi gagal. Coba lagi.")
@@ -41,10 +41,10 @@ class AuthActionsViewModel @Inject constructor(
         }
     }
 
-    fun registerCreator(name: String, email: String, password: String, city: String, phone: String?, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun registerCreator(name: String, email: String, password: String, city: String, phone: String?, address: String?, province: String?, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                authRepository.registerCreator(name, email, password, city, phone)
+                authRepository.registerCreator(name, email, password, city, phone, address, province)
                 onSuccess()
             } catch (e: Exception) {
                 onError(e.message ?: "Registrasi gagal. Coba lagi.")

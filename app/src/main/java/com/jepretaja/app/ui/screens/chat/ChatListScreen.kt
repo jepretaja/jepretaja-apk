@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Image
@@ -52,6 +53,8 @@ private val LOKAL_ID = Locale("in", "ID")
 @Composable
 fun ChatListScreen(
     onChatClick: (String) -> Unit,
+    onLogin: () -> Unit,
+    onRegister: () -> Unit,
     authViewModel: AuthViewModel,
     viewModel: ChatListViewModel = hiltViewModel(),
 ) {
@@ -66,8 +69,24 @@ fun ChatListScreen(
         topBar = { AppTopBar(title = "Chat", scrollBehavior = scrollBehavior) },
     ) { padding ->
         if (myUid == null) {
-            Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Masuk untuk melihat chat")
+            Column(
+                Modifier.padding(padding).fillMaxSize().padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Icon(Icons.Default.ChatBubbleOutline, contentDescription = null, tint = AppColors.Primary, modifier = Modifier.size(52.dp))
+                Spacer(Modifier.height(16.dp))
+                Text("Pesan kamu ada di sini", style = MaterialTheme.typography.titleLarge, color = AppColors.TextPrimary)
+                Spacer(Modifier.height(8.dp))
+                Text("Masuk atau daftar untuk mulai mengobrol dengan creator.", style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary)
+                Spacer(Modifier.height(20.dp))
+                Button(onClick = onLogin, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth().height(50.dp)) {
+                    Text("Masuk")
+                }
+                Spacer(Modifier.height(10.dp))
+                OutlinedButton(onClick = onRegister, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth().height(50.dp)) {
+                    Text("Daftar")
+                }
             }
             return@Scaffold
         }
