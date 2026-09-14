@@ -4,6 +4,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.os.Build
+import java.util.Locale
 import androidx.core.app.NotificationCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -38,10 +40,8 @@ class JepretAjaMessagingService : FirebaseMessagingService() {
         val route = routeFor(message.data["type"], message.data["referenceId"])
 
         val manager = getSystemService(NotificationManager::class.java) ?: return
-        if (manager.getNotificationChannel(CHANNEL_ID) == null) {
-            manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Notifikasi JepretAja", NotificationManager.IMPORTANCE_HIGH)
-            )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && manager.getNotificationChannel(CHANNEL_ID) == null) {
+            manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "Notifikasi JepretAja", NotificationManager.IMPORTANCE_HIGH))
         }
 
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -49,7 +49,10 @@ class JepretAjaMessagingService : FirebaseMessagingService() {
             route?.let { putExtra(EXTRA_ROUTE, it) }
         }
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            this,
+            uniqueRequestCode(message.data["notificationId"], message.data["referenceId"], message.data["type"]),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
@@ -70,6 +73,15 @@ class JepretAjaMessagingService : FirebaseMessagingService() {
             "payment", "booking", "refund", "dispute" -> Routes.bookingDetail(referenceId)
             "post", "comment", "like" -> Routes.exploreDetail(referenceId)
             else -> null
+        }
+    }
+
+    private fun uniqueRequestCode(notificationId: String?, referenceId: String?, type: String?): Int {
+        val stableKey = listOf(notificationId, type, referenceId).filterNot { it.isNullOrBlank() }.joinToString(":")
+        return if (stableKey.isBlank()) {
+            System.currentTimeMillis().toString().hashCode()
+        } else {
+            stableKey.lowercase(Locale.ROOT).hashCode()
         }
     }
 

@@ -189,15 +189,6 @@ fun CreatorProfileScreen(
                 },
             )
         },
-        bottomBar = {
-            creator?.let { c ->
-                BilahAksi(
-                    creator = c,
-                    onBooking = { bukaPaket() },
-                    onChat = { mulaiChat(c) },
-                )
-            }
-        },
     ) { padding ->
         when {
             loading -> KerangkaProfil(Modifier.padding(padding))
@@ -366,6 +357,13 @@ fun CreatorProfileScreen(
                                 Text(if (sudahDiikuti) "Mengikuti" else "Ikuti")
                             }
 
+                            Spacer(Modifier.height(12.dp))
+                            AksiProfilCreator(
+                                creator = c,
+                                onBooking = { bukaPaket() },
+                                onChat = { mulaiChat(c) },
+                            )
+
                             Spacer(Modifier.height(20.dp))
                             KartuKetersediaan(creator = c, tanggalPenuh = tanggalPenuh, onTanya = { mulaiChat(c) })
 
@@ -483,6 +481,39 @@ fun CreatorProfileScreen(
                 },
                 confirmButton = { TextButton(onClick = { dialogLapor = false }) { Text("Batal") } },
             )
+        }
+    }
+}
+
+@Composable
+private fun AksiProfilCreator(
+    creator: CreatorModel,
+    onBooking: () -> Unit,
+    onChat: () -> Unit,
+) {
+    val libur = !creator.acceptingBookings
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        OutlinedButton(
+            onClick = onChat,
+            modifier = Modifier.weight(1f).height(48.dp),
+            shape = RoundedCornerShape(percent = 50),
+        ) {
+            Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(19.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("Chat")
+        }
+        Button(
+            onClick = onBooking,
+            modifier = Modifier.weight(1f).height(48.dp),
+            shape = RoundedCornerShape(percent = 50),
+            enabled = !libur || creator.minPrice != null,
+        ) {
+            Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(19.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(if (libur) "Lihat Paket" else "Booking")
         }
     }
 }

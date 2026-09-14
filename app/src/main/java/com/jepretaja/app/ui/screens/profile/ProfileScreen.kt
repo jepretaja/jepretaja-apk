@@ -528,11 +528,6 @@ private fun BagianProfilIsi(
         VerifyEmailBanner(busy = verifyBusy, onSend = onKirimVerifikasi, onRefresh = onSegarkanVerifikasi)
         Spacer(Modifier.height(12.dp))
     }
-    if (isCreator) {
-        CreatorStudioBanner(onCreatorStudio)
-        Spacer(Modifier.height(12.dp))
-    }
-
     KelompokMenu(judul = "Detail Akun") {
         BarisData("Nama", nama.ifBlank { "-" })
         HorizontalDivider(color = AppColors.Border)
@@ -866,15 +861,6 @@ private fun BagianPengaturan(
         BarisMenu(Icons.Default.NotificationsNone, "Notifikasi", onClick = onNotifications)
         HorizontalDivider(color = AppColors.Border)
         BarisMenu(Icons.Default.QrCode2, "Bagikan Profil", onClick = onBagikan)
-    }
-
-    if (isCreator) {
-        Spacer(Modifier.height(14.dp))
-        KelompokMenu(judul = "Creator") {
-            BarisMenu(Icons.Default.CollectionsBookmark, "Karya Saya", onClick = onMyWorks)
-            HorizontalDivider(color = AppColors.Border)
-            BarisMenu(Icons.Default.Dashboard, "Creator Studio", onClick = onCreatorStudio)
-        }
     }
 
     Spacer(Modifier.height(14.dp))
@@ -1254,7 +1240,10 @@ private fun PostGrid(posts: List<ExplorePostModel>, onPostClick: (String) -> Uni
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(1.dp)) {
                 row.forEach { post ->
                     Box(
-                        Modifier.weight(1f).aspectRatio(16f / 9f)
+                        Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f)
                             .background(AppColors.SurfaceVariant)
                             .clickable { onPostClick(post.postId) },
                     ) {

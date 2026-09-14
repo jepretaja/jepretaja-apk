@@ -232,6 +232,12 @@ class StorageService @Inject constructor(
         return secureUrlOf(json)
     }
 
+    /** Foto sampul profil creator. */
+    suspend fun uploadProfileCover(creatorId: String, uri: Uri): String {
+        val json = upload(uri, "covers/$creatorId", "${UUID.randomUUID()}.jpg", "image", null)
+        return secureUrlOf(json)
+    }
+
     suspend fun uploadChatAttachment(chatId: String, uri: Uri): String {
         val json = upload(uri, "chat/$chatId", "${UUID.randomUUID()}.jpg", "image", null)
         return secureUrlOf(json)

@@ -53,7 +53,7 @@ fun AppBottomNavBar(
     Box(
         modifier
             .fillMaxWidth()
-            .zIndex(10f)
+            .zIndex(100f)
             .background(AppColors.Background)
             .navigationBarsPadding()
             .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),

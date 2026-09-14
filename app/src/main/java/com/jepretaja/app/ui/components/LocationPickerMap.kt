@@ -3,6 +3,7 @@ package com.jepretaja.app.ui.components
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -25,7 +26,7 @@ fun LocationPickerMap(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(selected, 15f)
     }
-    val markerState = MarkerState(position = selected)
+    val markerState = remember { MarkerState(position = selected) }
 
     LaunchedEffect(selected) {
         markerState.position = selected

@@ -1,6 +1,9 @@
 package com.jepretaja.app.ui.screens.creatordashboard
 
 import androidx.compose.foundation.layout.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -10,8 +13,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.data.repository.AuthRepository
@@ -22,12 +28,14 @@ import com.jepretaja.app.ui.components.PremiumCard
 import com.jepretaja.app.ui.components.SectionHeader
 import com.jepretaja.app.ui.components.rememberAppTopBarScrollBehavior
 import com.jepretaja.app.ui.state.AuthViewModel
+import com.jepretaja.app.services.StorageService
 import kotlinx.coroutines.launch
 
 @dagger.hilt.android.lifecycle.HiltViewModel
 class CreatorSettingsViewModel @javax.inject.Inject constructor(
     val creatorRepository: CreatorRepository,
     val authRepository: AuthRepository,
+    val storageService: StorageService,
 ) : androidx.lifecycle.ViewModel()
 
 /** Creator Settings — edit profil dan logout. */
@@ -47,6 +55,12 @@ fun CreatorSettingsScreen(
     var city by remember { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
+    var coverUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var coverUrl by remember { mutableStateOf<String?>(null) }
+    var uploadingCover by remember { mutableStateOf(false) }
+    val coverPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) coverUri = uri
+    }
 
     // Saklar menerima booking. Dimuat dari dokumen creator supaya posisinya
     // benar setelah aplikasi dibuka ulang, bukan selalu kembali ke "menerima".
@@ -63,6 +77,7 @@ fun CreatorSettingsScreen(
                 catatanLibur = c.awayNote.orEmpty()
                 if (bio.isBlank()) bio = c.bio.orEmpty()
                 if (city.isBlank()) city = c.city.orEmpty()
+                coverUrl = c.coverUrl
             }
         }
     }
@@ -146,6 +161,30 @@ fun CreatorSettingsScreen(
             SectionHeader("Profil")
             Spacer(Modifier.height(12.dp))
             PremiumCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+                Text("Foto sampul profil", style = MaterialTheme.typography.titleSmall, color = AppColors.TextPrimary)
+                Spacer(Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(16.dp))
+                        .background(AppColors.PrimarySoft),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val coverModel = coverUri ?: coverUrl
+                    if (coverModel != null) {
+                        AsyncImage(
+                            model = coverModel,
+                            contentDescription = "Foto sampul profil",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        Text("Belum ada foto sampul", color = AppColors.TextSecondary)
+                    }
+                    OutlinedButton(
+                        onClick = { coverPicker.launch("image/*") },
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp),
+                    ) { Text("Pilih foto sampul") }
+                }
+                Spacer(Modifier.height(16.dp))
                 OutlinedTextField(name, { name = it }, label = { Text("Nama / Nama Studio") }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(10.dp))
                 OutlinedTextField(bio, { bio = it }, label = { Text("Bio") }, minLines = 3, modifier = Modifier.fillMaxWidth())
@@ -164,15 +203,31 @@ fun CreatorSettingsScreen(
                         if (uid == null) return@Button
                         saving = true
                         scope.launch {
-                            runCatching { viewModel.creatorRepository.updateProfile(uid, name.trim(), bio.trim().ifBlank { null }, city.trim().ifBlank { null }, emptyList()) }
+                            val result = runCatching {
+                                val uploadedCover = coverUri?.let {
+                                    uploadingCover = true
+                                    viewModel.storageService.uploadProfileCover(uid, it)
+                                }
+                                uploadingCover = false
+                                viewModel.creatorRepository.updateProfile(
+                                    uid,
+                                    name.trim(),
+                                    bio.trim().ifBlank { null },
+                                    city.trim().ifBlank { null },
+                                    emptyList(),
+                                    uploadedCover,
+                                )
+                                uploadedCover?.let { coverUrl = it; coverUri = null }
+                            }
+                            uploadingCover = false
                             saving = false
-                            message = "Profil diperbarui"
+                            message = result.exceptionOrNull()?.message ?: "Profil dan foto sampul diperbarui"
                         }
                     },
-                    enabled = !saving,
+                    enabled = !saving && !uploadingCover,
                     shape = RoundedCornerShape(percent = 50),
                     modifier = Modifier.fillMaxWidth().height(52.dp),
-                ) { Text(if (saving) "Menyimpan..." else "Simpan Profil") }
+                ) { Text(if (uploadingCover) "Mengunggah sampul..." else if (saving) "Menyimpan..." else "Simpan Profil") }
             }
 
             Spacer(Modifier.height(28.dp))

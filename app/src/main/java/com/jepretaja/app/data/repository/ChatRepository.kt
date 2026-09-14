@@ -40,7 +40,29 @@ class ChatRepository @Inject constructor(private val db: FirebaseFirestore) {
             .whereEqualTo(field, userId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    trySend(chatsById.values.sortedByDescending { it.updatedAt?.toDate()?.time ?: 0L })
+                    // Rules/network errors on the broad collection query must
+                    // not turn an inbox with unread messages into a blank
+                    // screen. Resolve the affected chat documents from the
+                    // already-authorized unread message query instead.
+                    backgroundScope.launch {
+                        runCatching {
+                            db.collection(FirestorePaths.MESSAGES)
+                                .whereArrayContains("participants", userId)
+                                .whereEqualTo("readAt", null)
+                                .limit(100)
+                                .get()
+                                .await()
+                                .documents
+                                .mapNotNull { it.getString("chatId") }
+                                .distinct()
+                                .forEach { chatId ->
+                                    db.collection(FirestorePaths.CHATS).document(chatId).get().await()
+                                        .toObject(ChatModel::class.java)
+                                        ?.let { chatsById[it.chatId] = it }
+                                }
+                            publish()
+                        }
+                    }
                     return@addSnapshotListener
                 }
                 snapshot?.documents.orEmpty().forEach { document ->
@@ -221,9 +243,17 @@ class ChatRepository @Inject constructor(private val db: FirebaseFirestore) {
 
     suspend fun getOrCreateDirectChat(customerId: String, creatorId: String, otherPartyName: String): String {
         val existing = db.collection(FirestorePaths.CHATS)
-            .whereEqualTo("customerId", customerId).whereEqualTo("creatorId", creatorId)
-            .whereEqualTo("bookingId", null).limit(1).get().await()
-        if (!existing.isEmpty) return existing.documents.first().id
+            .whereEqualTo("customerId", customerId)
+            .whereEqualTo("creatorId", creatorId)
+            .limit(20)
+            .get()
+            .await()
+            .documents
+            .firstOrNull { doc ->
+                val bookingId = doc.getString("bookingId")
+                bookingId.isNullOrBlank()
+            }
+        if (existing != null) return existing.id
         val ref = db.collection(FirestorePaths.CHATS).add(
             mapOf("bookingId" to null, "customerId" to customerId, "creatorId" to creatorId, "otherPartyName" to otherPartyName, "lastMessage" to "", "updatedAt" to FieldValue.serverTimestamp())
         ).await()

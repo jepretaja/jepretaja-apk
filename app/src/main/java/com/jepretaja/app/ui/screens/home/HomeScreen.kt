@@ -118,6 +118,12 @@ fun HomeScreen(
         namaProfil != null -> namaProfil
         else -> "Tamu"
     }
+    val sapaanHeader = if (authState?.isLoggedIn == true) {
+        "Selamat datang, $namaHeader"
+    } else {
+        "Selamat datang"
+    }
+    val dapatMengaksesInbox = authState?.isLoggedIn == true
 
     // Header muncul saat kembali menggulir ke atas, lalu menghilang dengan
     // animasi Material saat pengguna menelusuri konten ke bawah.
@@ -129,13 +135,14 @@ fun HomeScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             AppTopBar(
-                title = namaHeader,
+                title = sapaanHeader,
                 actions = {
                     BadgedIconButton(
                         icon = Icons.AutoMirrored.Filled.Chat,
                         contentDescription = if (unreadChats > 0) "Chat, $unreadChats pesan baru" else "Chat",
                         count = unreadChats,
-                        onClick = onChat,
+                        onClick = { if (dapatMengaksesInbox) onChat() },
+                        tint = if (dapatMengaksesInbox) AppColors.TextPrimary else AppColors.TextSecondary,
                     )
                     BadgedIconButton(
                         icon = Icons.Default.NotificationsNone,
@@ -145,7 +152,8 @@ fun HomeScreen(
                             "Notifikasi"
                         },
                         count = unreadNotifications,
-                        onClick = onNotifications,
+                        onClick = { if (dapatMengaksesInbox) onNotifications() },
+                        tint = if (dapatMengaksesInbox) AppColors.TextPrimary else AppColors.TextSecondary,
                     )
                 },
                 scrollBehavior = scrollBehavior,
@@ -163,13 +171,13 @@ fun HomeScreen(
                 Row(verticalAlignment = Alignment.Top) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            "Cerita yang layak diingat.",
-                            color = AppColors.OnPrimary.copy(alpha = 0.78f),
+                            if (authState?.isLoggedIn == true) "Halo, $namaHeader" else "Selamat datang",
+                            color = AppColors.OnPrimary.copy(alpha = 0.82f),
                             style = MaterialTheme.typography.labelLarge,
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Temukan creator yang tepat untuk momen besarmu.",
+                            "Temukan creator yang tepat untuk momen penting Anda.",
                             color = AppColors.OnPrimary,
                             style = MaterialTheme.typography.headlineSmall,
                         )
@@ -231,7 +239,7 @@ fun HomeScreen(
             // sebelum deretan creator supaya pengguna tidak perlu menggulir jauh.
             Seksi(
                 judul = "Kategori",
-                subjudul = "Mulai dari jenis layanan yang kamu cari",
+                subjudul = "Mulai dari jenis layanan yang Anda cari",
             ) {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = PadTepi),
@@ -253,7 +261,7 @@ fun HomeScreen(
             // bukan dashboard dengan deretan menu.
             Seksi(
                 judul = "Karya terbaru",
-                subjudul = "Lihat apa yang sedang dibuat creator",
+                subjudul = "Lihat karya terbaik dari creator pilihan",
                 labelAksi = "Lihat semua",
                 onAksi = onSeeExplore,
             ) {
@@ -267,9 +275,9 @@ fun HomeScreen(
 
             // --- Creator yang direkomendasikan ---
             Seksi(
-                judul = "Rekomendasi untukmu",
+                judul = "Rekomendasi untuk Anda",
                 subjudul = if (viewModel.punyaMinat) {
-                    "Dipilih dari kategori yang kamu minati"
+                    "Dipilih berdasarkan minat dan kebutuhan Anda"
                 } else {
                     "Creator terverifikasi dan siap menerima booking"
                 },
@@ -285,8 +293,8 @@ fun HomeScreen(
 
             // --- Creator terdekat ---
             Seksi(
-                judul = "Creator di sekitarmu",
-                subjudul = "Mudah ditemukan, mudah diajak bekerja sama",
+                judul = "Creator terdekat",
+                subjudul = "Mudah ditemukan dan siap untuk bekerja sama",
             ) {
                 BarisCreator(
                     seksi = terdekat,

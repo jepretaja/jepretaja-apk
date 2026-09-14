@@ -173,29 +173,6 @@ fun ModernProfileScreen(
                 }
             }
 
-            if (authState.isCreator) {
-                Spacer(Modifier.height(AppSpacing.lg))
-                GradientHeroCard(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xl),
-                    colors = listOf(AppColors.PrimaryDark, AppColors.Primary),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Creator Studio", style = MaterialTheme.typography.titleLarge, color = AppColors.OnPrimary)
-                            Spacer(Modifier.height(4.dp))
-                            Text("Kelola karya, booking, layanan, dan pendapatanmu.", style = MaterialTheme.typography.bodySmall, color = AppColors.OnPrimary.copy(alpha = 0.78f))
-                        }
-                        Icon(Icons.Default.WorkOutline, contentDescription = null, tint = AppColors.OnPrimary, modifier = Modifier.size(28.dp))
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    Button(
-                        onClick = onCreatorStudio,
-                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.OnPrimary, contentColor = AppColors.PrimaryDark),
-                        shape = RoundedCornerShape(percent = 50),
-                    ) { Text("Masuk ke Studio Creator  →") }
-                }
-            }
-
             Spacer(Modifier.height(AppSpacing.lg))
             Row(Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xl), horizontalArrangement = Arrangement.SpaceEvenly) {
                 ProfileMetric("$followerCount", "Pengikut")
@@ -318,8 +295,21 @@ private fun PostGrid(posts: List<ExplorePostModel>, onPostClick: (String) -> Uni
         posts.chunked(3).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 row.forEach { post ->
-                    Box(Modifier.weight(1f).aspectRatio(16f / 9f).clip(RoundedCornerShape(4.dp)).background(AppColors.SurfaceVariant).clickable { onPostClick(post.postId) }) {
-                        AsyncImage(model = post.thumbnailUrl ?: post.mediaUrls.firstOrNull(), contentDescription = post.caption, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(AppColors.SurfaceVariant)
+                            .clickable { onPostClick(post.postId) },
+                    ) {
+                        AsyncImage(
+                            model = post.thumbnailUrl ?: post.mediaUrls.firstOrNull(),
+                            contentDescription = post.caption,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
                         Row(Modifier.align(Alignment.BottomStart).padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
                             Spacer(Modifier.width(3.dp))

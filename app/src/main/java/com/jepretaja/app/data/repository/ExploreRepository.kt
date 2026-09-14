@@ -1,6 +1,7 @@
 package com.jepretaja.app.data.repository
 
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.jepretaja.app.core.util.CaptionParser
@@ -318,8 +319,12 @@ class ExploreRepository @Inject constructor(
     /** Feed tab "Following": hanya post dari creator yang diikuti user ini.
      * Sebelumnya tab ini diam-diam menampilkan feed umum karena streamFeed()
      * membuang nilai "Following" tanpa menggantinya dengan apa pun. */
-    fun streamFollowingFeed(userId: String): Flow<List<ExplorePostModel>> = flow {
-        val follows = db.collection(FirestorePaths.FOLLOWS).whereEqualTo("userId", userId).get().await()
+    fun streamFollowingFeed(userId: String, limit: Long = 30): Flow<List<ExplorePostModel>> = flow {
+        val follows = db.collection(FirestorePaths.FOLLOWS)
+            .whereEqualTo("userId", userId)
+            .limit(200)
+            .get()
+            .await()
         val creatorIds = follows.documents.mapNotNull { it.getString("creatorId") }
         if (creatorIds.isEmpty()) {
             emit(emptyList())
@@ -330,10 +335,12 @@ class ExploreRepository @Inject constructor(
             db.collection(FirestorePaths.EXPLORE_POSTS)
                 .whereEqualTo("status", "published")
                 .whereIn("creatorId", chunk)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(limit)
                 .get().await()
                 .toObjects(ExplorePostModel::class.java)
         }
-        emit(posts)
+            emit(posts.sortedByDescending { it.createdAt }.take(limit.toInt()))
     }
 
     /**
@@ -343,8 +350,12 @@ class ExploreRepository @Inject constructor(
      * Jaraknya dihitung dari `serviceLat`/`serviceLng` milik creator dengan rumus
      * yang sama seperti layar Nearby, lalu post diurutkan dari creator terdekat.
      */
-    fun streamNearbyFeed(lat: Double, lng: Double, radiusKm: Double = 50.0): Flow<List<ExplorePostModel>> = flow {
-        val creators = db.collection(FirestorePaths.CREATORS).whereEqualTo("status", "active").get().await()
+    fun streamNearbyFeed(lat: Double, lng: Double, radiusKm: Double = 50.0, limit: Long = 30): Flow<List<ExplorePostModel>> = flow {
+        val creators = db.collection(FirestorePaths.CREATORS)
+            .whereEqualTo("status", "active")
+            .limit(200)
+            .get()
+            .await()
         val nearbyIds = creators.documents.mapNotNull { doc ->
             val cLat = doc.getDouble("serviceLat") ?: return@mapNotNull null
             val cLng = doc.getDouble("serviceLng") ?: return@mapNotNull null
@@ -361,10 +372,12 @@ class ExploreRepository @Inject constructor(
             db.collection(FirestorePaths.EXPLORE_POSTS)
                 .whereEqualTo("status", "published")
                 .whereIn("creatorId", chunk)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(limit)
                 .get().await()
                 .toObjects(ExplorePostModel::class.java)
-        }.sortedBy { order[it.creatorId] ?: Int.MAX_VALUE }
-        emit(posts)
+            }.sortedWith(compareBy<ExplorePostModel> { order[it.creatorId] ?: Int.MAX_VALUE }.thenByDescending { it.createdAt })
+            emit(posts.take(limit.toInt()))
     }
 
     /** Jarak lingkaran besar dalam km. */
@@ -414,25 +427,41 @@ class ExploreRepository @Inject constructor(
      * pernah ada satu layar pun yang membacanya kembali.
      */
     fun streamLikedPosts(userId: String): Flow<List<ExplorePostModel>> = flow {
-        val likes = db.collection(FirestorePaths.EXPLORE_LIKES).whereEqualTo("userId", userId).get().await()
+        val likes = db.collection(FirestorePaths.EXPLORE_LIKES)
+            .whereEqualTo("userId", userId)
+            .limit(200)
+            .get()
+            .await()
         val postIds = likes.documents.mapNotNull { it.getString("postId") }
-        val posts = postIds.mapNotNull { id ->
+        val posts = postIds.chunked(100).flatMap { chunk ->
             runCatching {
-                db.collection(FirestorePaths.EXPLORE_POSTS).document(id).get().await()
-                    .toObject(ExplorePostModel::class.java)
-            }.getOrNull()
+                db.collection(FirestorePaths.EXPLORE_POSTS)
+                    .whereIn(FieldPath.documentId(), chunk)
+                    .get()
+                    .await()
+            }
+                .getOrDefault(emptyList())
+                .mapNotNull { it.toObject(ExplorePostModel::class.java) }
         }
         emit(posts)
     }
 
     fun streamSavedPosts(userId: String): Flow<List<ExplorePostModel>> = flow {
-        val saves = db.collection(FirestorePaths.EXPLORE_SAVES).whereEqualTo("userId", userId).get().await()
+        val saves = db.collection(FirestorePaths.EXPLORE_SAVES)
+            .whereEqualTo("userId", userId)
+            .limit(200)
+            .get()
+            .await()
         val postIds = saves.documents.mapNotNull { it.getString("postId") }
-        val posts = postIds.mapNotNull { id ->
+        val posts = postIds.chunked(100).flatMap { chunk ->
             runCatching {
-                db.collection(FirestorePaths.EXPLORE_POSTS).document(id).get().await()
-                    .toObject(ExplorePostModel::class.java)
-            }.getOrNull()
+                db.collection(FirestorePaths.EXPLORE_POSTS)
+                    .whereIn(FieldPath.documentId(), chunk)
+                    .get()
+                    .await()
+            }
+                .getOrDefault(emptyList())
+                .mapNotNull { it.toObject(ExplorePostModel::class.java) }
         }
         emit(posts)
     }

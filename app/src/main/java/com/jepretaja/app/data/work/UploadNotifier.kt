@@ -3,6 +3,7 @@ package com.jepretaja.app.data.work
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.jepretaja.app.R
 import kotlin.math.roundToInt
@@ -12,7 +13,7 @@ object UploadNotifier {
 
     private fun manager(context: Context): NotificationManager {
         val manager = context.getSystemService(NotificationManager::class.java)
-        if (manager.getNotificationChannel(CHANNEL) == null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && manager.getNotificationChannel(CHANNEL) == null) {
             manager.createNotificationChannel(NotificationChannel(CHANNEL, "Status upload", NotificationManager.IMPORTANCE_LOW))
         }
         return manager

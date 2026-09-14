@@ -23,6 +23,7 @@ class ReviewsViewModel @Inject constructor(
             .whereEqualTo("creatorId", creatorId)
             .whereEqualTo("status", "published")
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(100)
             .asFlow<ReviewModel>()
             .catch { emit(emptyList()) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

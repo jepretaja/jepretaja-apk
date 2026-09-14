@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jepretaja.app.core.theme.AppColors
+import com.jepretaja.app.data.model.IndonesianLocations
 import com.jepretaja.app.ui.components.BigPrimaryButton
 import com.jepretaja.app.ui.state.AuthActionsViewModel
 
@@ -34,6 +35,21 @@ fun RegisterCustomerScreen(
     var password by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var provinceExpanded by remember { mutableStateOf(false) }
+    var cityExpanded by remember { mutableStateOf(false) }
+    val provinceOptions = remember { IndonesianLocations.provinces }
+    val cityOptions = remember(province) { IndonesianLocations.citiesForProvince(province) }
+
+    LaunchedEffect(province) {
+        if (province.isBlank()) {
+            city = ""
+            return@LaunchedEffect
+        }
+        if (cityOptions.isNotEmpty() && (city.isBlank() || city !in cityOptions)) {
+            city = cityOptions.first()
+        }
+    }
+
     val formReady = name.isNotBlank() && email.contains("@") && password.length >= 8
 
     Scaffold(
@@ -73,11 +89,64 @@ fun RegisterCustomerScreen(
             Spacer(Modifier.height(14.dp))
             OutlinedTextField(phone, { phone = it }, label = { Text("No. HP") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(14.dp))
+            ExposedDropdownMenuBox(
+                expanded = provinceExpanded,
+                onExpandedChange = { provinceExpanded = it },
+            ) {
+                OutlinedTextField(
+                    value = province,
+                    onValueChange = { province = it },
+                    label = { Text("Provinsi") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryEditable),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = provinceExpanded) },
+                )
+                ExposedDropdownMenu(
+                    expanded = provinceExpanded,
+                    onDismissRequest = { provinceExpanded = false },
+                ) {
+                    provinceOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                province = option
+                                provinceExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            ExposedDropdownMenuBox(
+                expanded = cityExpanded,
+                onExpandedChange = { if (cityOptions.isNotEmpty()) cityExpanded = it },
+            ) {
+                OutlinedTextField(
+                    value = city,
+                    onValueChange = { city = it },
+                    label = { Text("Kota") },
+                    singleLine = true,
+                    enabled = cityOptions.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryEditable),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityExpanded) },
+                )
+                ExposedDropdownMenu(
+                    expanded = cityExpanded && cityOptions.isNotEmpty(),
+                    onDismissRequest = { cityExpanded = false },
+                ) {
+                    cityOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                city = option
+                                cityExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(14.dp))
             OutlinedTextField(address, { address = it }, label = { Text("Alamat Lengkap") }, minLines = 2, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(14.dp))
-            OutlinedTextField(city, { city = it }, label = { Text("Kota") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(14.dp))
-            OutlinedTextField(province, { province = it }, label = { Text("Provinsi") }, singleLine = true, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(14.dp))
             OutlinedTextField(
                 password, { password = it }, label = { Text("Password") },

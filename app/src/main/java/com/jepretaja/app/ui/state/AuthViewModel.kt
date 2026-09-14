@@ -127,10 +127,49 @@ class AuthViewModel @Inject constructor(
 
     /** Simpan perubahan profil sendiri, lalu segarkan state supaya seluruh
      * layar (header profil, nama di chat, dst) langsung ikut berubah. */
-    fun updateProfile(name: String, phone: String?, photoUrl: String?, onResult: (String?) -> Unit) {
+    fun updateProfile(
+        name: String,
+        username: String,
+        phone: String?,
+        dateOfBirth: String?,
+        gender: String?,
+        address: String?,
+        city: String?,
+        province: String?,
+        bio: String?,
+        photoUrl: String?,
+        onResult: (String?) -> Unit,
+    ) {
         viewModelScope.launch {
             val result = runCatching {
-                authRepository.updateMyProfile(name, phone, photoUrl, isCreator = _uiState.value.isCreator)
+                authRepository.updateMyProfile(
+                    name = name,
+                    username = username,
+                    phone = phone,
+                    dateOfBirth = dateOfBirth,
+                    gender = gender,
+                    address = address,
+                    city = city,
+                    province = province,
+                    bio = bio,
+                    photoUrl = photoUrl,
+                    isCreator = _uiState.value.isCreator,
+                )
+            }
+            if (result.isSuccess) refreshProfile()
+            onResult(result.exceptionOrNull()?.message)
+        }
+    }
+
+    fun updatePrivacySettings(
+        publicProfile: Boolean,
+        allowMessages: Boolean,
+        showActivity: Boolean,
+        onResult: (String?) -> Unit = {},
+    ) {
+        viewModelScope.launch {
+            val result = runCatching {
+                authRepository.updatePrivacySettings(publicProfile, allowMessages, showActivity)
             }
             if (result.isSuccess) refreshProfile()
             onResult(result.exceptionOrNull()?.message)
@@ -157,6 +196,16 @@ class AuthViewModel @Inject constructor(
         val pesan: String?,
         val perluMasukUlang: Boolean = false,
     )
+
+    fun disableAccount(onResult: (String?) -> Unit = {}) {
+        viewModelScope.launch {
+            val result = runCatching { authRepository.disableAccount() }
+            if (result.isSuccess) {
+                refreshProfile()
+            }
+            onResult(result.exceptionOrNull()?.message ?: if (result.isSuccess) "Akun berhasil dinonaktifkan." else "Gagal menonaktifkan akun.")
+        }
+    }
 
     fun deleteAccount(onResult: (HasilHapusAkun) -> Unit) {
         viewModelScope.launch {

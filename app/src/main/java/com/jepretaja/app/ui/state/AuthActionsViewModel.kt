@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.jepretaja.app.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -33,10 +36,11 @@ class AuthActionsViewModel @Inject constructor(
     fun registerCustomer(name: String, email: String, password: String, phone: String?, address: String?, city: String?, province: String?, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
+                validateRegistration(name, email, password)
                 authRepository.registerCustomer(name, email, password, phone, address, city, province)
                 onSuccess()
             } catch (e: Exception) {
-                onError(e.message ?: "Registrasi gagal. Coba lagi.")
+                onError(pesanRegistrasi(e))
             }
         }
     }
@@ -44,12 +48,19 @@ class AuthActionsViewModel @Inject constructor(
     fun registerCreator(name: String, email: String, password: String, city: String, phone: String?, address: String?, province: String?, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
+                validateRegistration(name, email, password)
                 authRepository.registerCreator(name, email, password, city, phone, address, province)
                 onSuccess()
             } catch (e: Exception) {
-                onError(e.message ?: "Registrasi gagal. Coba lagi.")
+                onError(pesanRegistrasi(e))
             }
         }
+    }
+
+    private fun validateRegistration(name: String, email: String, password: String) {
+        require(name.isNotBlank()) { "Nama wajib diisi." }
+        require(android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()) { "Format email tidak valid." }
+        require(password.length >= 8) { "Password minimal 8 karakter." }
     }
 
     fun signInWithGoogle(idToken: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
@@ -90,5 +101,19 @@ class AuthActionsViewModel @Inject constructor(
         is FirebaseNetworkException -> "Tidak ada koneksi internet. Sambungkan dulu lalu coba lagi."
         is FirebaseTooManyRequestsException -> "Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi."
         else -> e.message ?: "Gagal mengirim email pemulihan. Coba lagi."
+    }
+
+    private fun pesanRegistrasi(e: Throwable): String = when (e) {
+        is IllegalArgumentException -> e.message ?: "Data pendaftaran belum lengkap."
+        is FirebaseAuthUserCollisionException -> "Email ini sudah terdaftar. Gunakan email lain atau masuk melalui Login."
+        is FirebaseAuthWeakPasswordException -> "Password terlalu lemah. Gunakan minimal 8 karakter."
+        is FirebaseAuthInvalidCredentialsException -> "Format email tidak valid."
+        is FirebaseNetworkException -> "Tidak ada koneksi internet. Sambungkan dulu lalu coba lagi."
+        is FirebaseTooManyRequestsException -> "Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi."
+        is FirebaseAuthException -> when (e.errorCode) {
+            "ERROR_OPERATION_NOT_ALLOWED" -> "Pendaftaran email sedang dinonaktifkan di server."
+            else -> "Registrasi gagal. Periksa data lalu coba lagi."
+        }
+        else -> "Registrasi gagal. Periksa koneksi dan data pendaftaran lalu coba lagi."
     }
 }

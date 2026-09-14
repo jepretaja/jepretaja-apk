@@ -46,12 +46,13 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun registerCustomer(name: String, email: String, password: String, phone: String?, address: String?, city: String?, province: String?) {
-        val cred = auth.createUserWithEmailAndPassword(email, password).await()
+        val normalizedEmail = email.trim().lowercase()
+        val cred = auth.createUserWithEmailAndPassword(normalizedEmail, password).await()
         val uid = cred.user!!.uid
         try {
             db.collection(FirestorePaths.USERS).document(uid).set(
                 mapOf(
-                    "userId" to uid, "name" to name, "email" to email, "phone" to phone,
+                    "userId" to uid, "name" to name, "email" to normalizedEmail, "phone" to phone,
                     "address" to address, "city" to city, "province" to province,
                     "role" to "customer", "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
                 )
@@ -65,14 +66,15 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun registerCreator(name: String, email: String, password: String, city: String, phone: String?, address: String?, province: String?) {
-        val cred = auth.createUserWithEmailAndPassword(email, password).await()
+        val normalizedEmail = email.trim().lowercase()
+        val cred = auth.createUserWithEmailAndPassword(normalizedEmail, password).await()
         val uid = cred.user!!.uid
         try {
             val batch = db.batch()
             batch.set(
                 db.collection(FirestorePaths.USERS).document(uid),
                 mapOf(
-                    "userId" to uid, "name" to name, "email" to email, "phone" to phone,
+                    "userId" to uid, "name" to name, "email" to normalizedEmail, "phone" to phone,
                     "address" to address, "city" to city, "province" to province,
                     "role" to "creator", "status" to "active", "createdAt" to FieldValue.serverTimestamp(),
                 )
@@ -167,19 +169,83 @@ class AuthRepository @Inject constructor(
      * ikut ditulis, supaya tidak ada jalan bagi klien untuk menaikkan haknya
      * sendiri lewat layar edit profil.
      */
-    suspend fun updateMyProfile(name: String, phone: String?, photoUrl: String?, isCreator: Boolean) {
+    suspend fun updateMyProfile(
+        name: String,
+        username: String,
+        phone: String?,
+        dateOfBirth: String?,
+        gender: String?,
+        address: String?,
+        city: String?,
+        province: String?,
+        bio: String?,
+        photoUrl: String?,
+        isCreator: Boolean,
+    ) {
         val uid = currentUser?.uid ?: throw IllegalStateException("Belum masuk.")
-        val updates = mutableMapOf<String, Any?>("name" to name)
-        updates["phone"] = phone
+        val cleanedUsername = username.trim().lowercase()
+        require(cleanedUsername.isNotBlank()) { "Username wajib diisi." }
+        require(cleanedUsername.matches(Regex("^[a-z0-9._]{3,20}$"))) {
+            "Username hanya boleh huruf kecil, angka, titik, dan underscore dengan panjang 3–20 karakter."
+        }
+
+        val dup = db.collection(FirestorePaths.USERS)
+            .whereEqualTo("username", cleanedUsername)
+            .limit(1)
+            .get()
+            .await()
+        if (dup.documents.any { it.id != uid }) {
+            throw IllegalStateException("Username sudah digunakan oleh akun lain.")
+        }
+
+        val updates = mutableMapOf<String, Any?>(
+            "name" to name.trim(),
+            "username" to cleanedUsername,
+            "phone" to phone,
+            "dateOfBirth" to dateOfBirth?.trim(),
+            "gender" to gender?.trim(),
+            "address" to address?.trim(),
+            "city" to city?.trim(),
+            "province" to province?.trim(),
+            "bio" to bio?.trim(),
+        )
         if (photoUrl != null) updates["photoUrl"] = photoUrl
+
         val batch = db.batch()
         batch.update(db.collection(FirestorePaths.USERS).document(uid), updates)
         if (isCreator) {
-            val creatorUpdates = mutableMapOf<String, Any?>("displayName" to name)
+            val creatorUpdates = mutableMapOf<String, Any?>("displayName" to name.trim(), "username" to cleanedUsername)
             if (photoUrl != null) creatorUpdates["photoUrl"] = photoUrl
             batch.update(db.collection(FirestorePaths.CREATORS).document(uid), creatorUpdates)
         }
         batch.commit().await()
+        if (isCreator && photoUrl != null) {
+            val posts = db.collection(FirestorePaths.EXPLORE_POSTS)
+                .whereEqualTo("creatorId", uid)
+                .limit(200)
+                .get()
+                .await()
+            posts.documents.chunked(400).forEach { chunk ->
+                val postBatch = db.batch()
+                chunk.forEach { postBatch.update(it.reference, "creatorPhotoUrl", photoUrl) }
+                postBatch.commit().await()
+            }
+        }
+    }
+
+    suspend fun updatePrivacySettings(
+        publicProfile: Boolean,
+        allowMessages: Boolean,
+        showActivity: Boolean,
+    ) {
+        val uid = currentUser?.uid ?: throw IllegalStateException("Belum masuk.")
+        db.collection(FirestorePaths.USERS).document(uid).update(
+            mapOf(
+                "publicProfile" to publicProfile,
+                "allowMessages" to allowMessages,
+                "showActivity" to showActivity,
+            )
+        ).await()
     }
 
     /**
@@ -191,6 +257,14 @@ class AuthRepository @Inject constructor(
      * fungsi ini hanya menandai dokumen user sebagai "deleted", sehingga post dan
      * komentar lama tetap tayang atas nama akun yang sudah tidak ada.
      */
+    suspend fun disableAccount() {
+        val uid = currentUser?.uid ?: throw IllegalStateException("Belum masuk.")
+        db.collection(FirestorePaths.USERS).document(uid).update(
+            mapOf("status" to "disabled")
+        ).await()
+        auth.signOut()
+    }
+
     suspend fun deleteAccount() {
         val uid = currentUser?.uid ?: return
         exploreRepository.purgeUserContent(uid)

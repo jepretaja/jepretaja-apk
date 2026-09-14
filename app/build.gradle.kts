@@ -86,10 +86,19 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Hanya dipasang bila keystore.properties benar-benar ada; tanpa itu
-            // build release tetap jalan (menghasilkan berkas tak bertanda tangan)
-            // daripada gagal total di mesin yang memang belum punya kuncinya.
-            if (keystorePropsFile.exists()) {
+            val requestedRelease = gradle.startParameter.taskNames.any { task ->
+                task.contains("Release", ignoreCase = true)
+            }
+            if (requestedRelease) {
+                require(keystorePropsFile.exists()) {
+                    "Release build membutuhkan keystore.properties agar APK ditandatangani."
+                }
+                require(apiBaseUrl.startsWith("https://")) {
+                    "Release build membutuhkan API_BASE_URL HTTPS yang valid."
+                }
+                require(cloudinaryCloudName.isNotBlank() && cloudinaryUploadPreset.isNotBlank()) {
+                    "Release build membutuhkan CLOUDINARY_CLOUD_NAME dan CLOUDINARY_UPLOAD_PRESET."
+                }
                 signingConfig = signingConfigs.getByName("release")
             }
         }
@@ -98,6 +107,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -130,6 +140,8 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
+
     // --- Compose ---
     val composeBom = platform("androidx.compose:compose-bom:2024.09.02")
     implementation(composeBom)

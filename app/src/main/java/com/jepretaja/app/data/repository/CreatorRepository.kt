@@ -357,10 +357,22 @@ class CreatorRepository @Inject constructor(private val db: FirebaseFirestore) {
     /** Update profil creator (section 8) — field non-finansial saja
      * (nama, bio, kota, kategori); RBAC/verified TIDAK bisa diubah dari
      * sini, hanya lewat Admin. */
-    suspend fun updateProfile(creatorId: String, displayName: String, bio: String?, city: String?, categories: List<String>) {
-        db.collection(FirestorePaths.CREATORS).document(creatorId).update(
-            mapOf("displayName" to displayName, "bio" to bio, "city" to city, "categories" to categories)
-        ).await()
+    suspend fun updateProfile(
+        creatorId: String,
+        displayName: String,
+        bio: String?,
+        city: String?,
+        categories: List<String>,
+        coverUrl: String? = null,
+    ) {
+        val updates = mutableMapOf<String, Any?>(
+            "displayName" to displayName,
+            "bio" to bio,
+            "city" to city,
+            "categories" to categories,
+        )
+        coverUrl?.let { updates["coverUrl"] = it }
+        db.collection(FirestorePaths.CREATORS).document(creatorId).update(updates).await()
     }
 
     /** Menyimpan jam kerja mingguan. */

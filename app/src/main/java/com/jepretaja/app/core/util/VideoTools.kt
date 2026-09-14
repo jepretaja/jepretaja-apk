@@ -41,13 +41,16 @@ object VideoTools {
                 posisiMs * 1000,
                 MediaMetadataRetriever.OPTION_CLOSEST,
             ) ?: return@withContext null
-
-            val file = File(context.cacheDir, "cover_scrub.jpg")
-            FileOutputStream(file).use { out -> frame.compress(Bitmap.CompressFormat.JPEG, 88, out) }
-            // Nama berkasnya tetap, jadi Uri-nya juga sama setiap kali. Ditambah
-            // parameter waktu supaya Coil tidak menampilkan gambar lama dari
-            // cache-nya sendiri.
-            "${file.toUri()}?t=$posisiMs".toUri()
+            try {
+                val file = File(context.cacheDir, "cover_scrub.jpg")
+                FileOutputStream(file).use { out -> frame.compress(Bitmap.CompressFormat.JPEG, 88, out) }
+                // Nama berkasnya tetap, jadi Uri-nya juga sama setiap kali. Ditambah
+                // parameter waktu supaya Coil tidak menampilkan gambar lama dari
+                // cache-nya sendiri.
+                "${file.toUri()}?t=$posisiMs".toUri()
+            } finally {
+                frame.recycle()
+            }
         } catch (e: Exception) {
             null
         } finally {
@@ -67,9 +70,9 @@ object VideoTools {
      * Mengembalikan null kalau pemotongan gagal; pemanggil lalu memakai berkas
      * aslinya, karena gagal memotong bukan alasan membatalkan unggahan.
      */
-    @OptIn(UnstableApi::class)
+    @androidx.annotation.OptIn(UnstableApi::class)
     suspend fun trim(context: Context, video: Uri, mulaiMs: Long, selesaiMs: Long): Uri? =
-        withContext(Dispatchers.Main) {
+        withContext(Dispatchers.IO) {
             val keluaran = File(context.cacheDir, "trim_${System.currentTimeMillis()}.mp4")
             val item = MediaItem.Builder()
                 .setUri(video)

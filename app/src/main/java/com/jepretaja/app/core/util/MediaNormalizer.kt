@@ -31,7 +31,11 @@ object MediaNormalizer {
         context.contentResolver.openInputStream(source)?.use { BitmapFactory.decodeStream(it, null, bounds) }
         require(bounds.outWidth > 0 && bounds.outHeight > 0) { "Ukuran foto tidak terbaca." }
 
-        val bitmap = context.contentResolver.openInputStream(source)?.use { BitmapFactory.decodeStream(it) }
+        val sampleSize = calculateSampleSize(bounds.outWidth, bounds.outHeight)
+        val bitmapOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+        val bitmap = context.contentResolver.openInputStream(source)?.use {
+            BitmapFactory.decodeStream(it, null, bitmapOptions)
+        }
             ?: error("Foto tidak bisa dibaca.")
         val sourceRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
         val cropWidth: Int
@@ -54,6 +58,13 @@ object MediaNormalizer {
         if (cropped !== bitmap) cropped.recycle()
         bitmap.recycle()
         file.toUri()
+    }
+
+    private fun calculateSampleSize(width: Int, height: Int): Int {
+        var sampleSize = 1
+        val largestSide = maxOf(width, height)
+        while (largestSide / sampleSize > 2048) sampleSize *= 2
+        return sampleSize
     }
 
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)

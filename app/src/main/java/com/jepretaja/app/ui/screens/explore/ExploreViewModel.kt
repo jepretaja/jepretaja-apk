@@ -30,6 +30,20 @@ class ExploreViewModel @Inject constructor(
     private val _memuatLagi = MutableStateFlow(false)
     val memuatLagi: StateFlow<Boolean> = _memuatLagi.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    fun retryLoad() {
+        _error.value = null
+        _memuatLagi.value = false
+        _habis.value = false
+        _isLoading.value = false
+        _limit.value = maxOf(_limit.value, 30L)
+    }
+
     /** Kecepatan putar video, dipilih lewat menu tekan-lama. */
     private val _kecepatan = MutableStateFlow(1f)
     val kecepatan: StateFlow<Float> = _kecepatan.asStateFlow()
@@ -44,14 +58,17 @@ class ExploreViewModel @Inject constructor(
      * repository untuk alasannya.
      */
     fun muatLagi() {
-        if (_habis.value || _memuatLagi.value) return
+        if (_habis.value || _memuatLagi.value || _isLoading.value) return
         _memuatLagi.value = true
         _limit.value = _limit.value + 30
     }
 
     /** Menyegarkan: batas dikembalikan ke awal dan daftar dihitung ulang. */
     fun segarkan() {
+        _error.value = null
         _habis.value = false
+        _memuatLagi.value = false
+        _isLoading.value = false
         _limit.value = 30
     }
 
@@ -99,12 +116,12 @@ class ExploreViewModel @Inject constructor(
                 when {
                     tab == "Following" && uid != null -> {
                         _needsLocation.value = false
-                        repository.streamFollowingFeed(uid).catch { emit(emptyList()) }
+                        repository.streamFollowingFeed(uid, limit).catch { emit(emptyList()) }
                     }
                     tab == "Nearby" -> {
                         _needsLocation.value = loc == null
                         if (loc == null) flowOf(emptyList())
-                        else repository.streamNearbyFeed(loc.first, loc.second).catch { emit(emptyList()) }
+                        else repository.streamNearbyFeed(loc.first, loc.second, limit = limit).catch { emit(emptyList()) }
                     }
                     else -> {
                         _needsLocation.value = false
@@ -112,12 +129,20 @@ class ExploreViewModel @Inject constructor(
                     }
                 }
             }
+            .onStart { _isLoading.value = true; _error.value = null }
             .onEach { daftar ->
                 _memuatLagi.value = false
+                _isLoading.value = false
+                _error.value = null
                 // Server memberi lebih sedikit dari yang diminta => tidak ada
                 // lagi yang bisa diambil. Penanda inilah yang membuat feed bisa
                 // berkata "kamu sudah lihat semua" alih-alih diam saja.
                 if (daftar.size < _limit.value) _habis.value = true
+            }
+            .catch { e ->
+                _isLoading.value = false
+                _error.value = e.message ?: "Gagal memuat feed."
+                emit(emptyList())
             }
 
     /**

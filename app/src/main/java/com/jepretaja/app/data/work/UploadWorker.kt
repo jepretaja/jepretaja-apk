@@ -285,7 +285,8 @@ class UploadWorker(
         "packageName" to packageName,
         "packagePrice" to packagePrice,
         "metrics" to mapOf("like" to 0, "comment" to 0, "save" to 0, "share" to 0, "view" to 0),
-        "status" to "published",
+        "status" to "pending_review",
+        "moderationNote" to null,
         "createdAt" to FieldValue.serverTimestamp(),
     )
 

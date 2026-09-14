@@ -88,6 +88,7 @@ fun CreatorUploadScreen(
 
     var mediaUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isVideo by remember { mutableStateOf(false) }
+    var judul by remember { mutableStateOf("") }
     var caption by remember { mutableStateOf("") }
     var category by remember { mutableStateOf(AppConstants.SERVICE_CATEGORIES.first()) }
     var target by remember { mutableStateOf("Explore") }
@@ -204,17 +205,15 @@ fun CreatorUploadScreen(
             }
             if (selesai != null) {
                 snackbarHostState.showSnackbar("Unggahan Berhasil")
-                delay(900)
-                onBack()
             }
         }
     }
 
-    LaunchedEffect(mediaUris, isVideo, caption, category, target, lokasi, kebijakanKomentar, bolehSimpan, bolehLike, bolehDownload, tampilkanJumlahLike, visibilitas, paketDipilih?.packageId) {
-        if (mediaUris.isNotEmpty() || caption.isNotBlank()) {
+    LaunchedEffect(mediaUris, isVideo, judul, caption, category, target, lokasi, kebijakanKomentar, bolehSimpan, bolehLike, bolehDownload, tampilkanJumlahLike, visibilitas, paketDipilih?.packageId) {
+        if (mediaUris.isNotEmpty() || judul.isNotBlank() || caption.isNotBlank()) {
             delay(900)
             viewModel.simpanDraft(
-                draftOtomatisId, caption, category, target, mediaUris, isVideo,
+                draftOtomatisId, buildString { if (judul.isNotBlank()) append("$judul\n\n"); append(caption) }, category, target, mediaUris, isVideo,
                 PengaturanPost(
                     location = lokasi.trim().takeIf { it.isNotBlank() },
                     commentPolicy = kebijakanKomentar,
@@ -273,7 +272,7 @@ fun CreatorUploadScreen(
                 OutlinedButton(
                     onClick = {
                         viewModel.simpanDraft(
-                            draftAktif, caption, category, target, mediaUris, isVideo,
+                            draftAktif, buildString { if (judul.isNotBlank()) append("$judul\n\n"); append(caption) }, category, target, mediaUris, isVideo,
                             PengaturanPost(
                                 location = lokasi.trim().takeIf { it.isNotBlank() },
                                 commentPolicy = kebijakanKomentar,
@@ -288,9 +287,8 @@ fun CreatorUploadScreen(
                             ),
                             sampulPratinjau,
                         )
-                        onBack()
                     },
-                    enabled = caption.isNotBlank() || mediaUris.isNotEmpty(),
+                    enabled = judul.isNotBlank() || caption.isNotBlank() || mediaUris.isNotEmpty(),
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(percent = 50),
                 ) { Text("Simpan Draft") }
@@ -299,7 +297,8 @@ fun CreatorUploadScreen(
                         when {
                             mediaUris.isEmpty() -> scope.launch { snackbarHostState.showSnackbar("Pilih minimal satu media.") }
                             alasanTolak != null -> scope.launch { snackbarHostState.showSnackbar(alasanTolak!!) }
-                            caption.isBlank() -> scope.launch { snackbarHostState.showSnackbar("Caption wajib diisi sebelum dipublikasikan.") }
+                            judul.isBlank() -> scope.launch { snackbarHostState.showSnackbar("Judul wajib diisi sebelum dipublikasikan.") }
+                            caption.isBlank() -> scope.launch { snackbarHostState.showSnackbar("Deskripsi wajib diisi sebelum dipublikasikan.") }
                             else -> sedangMenyiapkan = true
                         }
                     },
@@ -529,8 +528,19 @@ fun CreatorUploadScreen(
 
             Spacer(Modifier.height(20.dp))
             OutlinedTextField(
+                judul, { judul = it },
+                label = { Text("Judul karya") },
+                placeholder = { Text("Contoh: Senja di Pantai Lhokseumawe") },
+                singleLine = true,
+                supportingText = { Text("Buat judul singkat yang mudah diingat calon pelanggan.") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
                 caption, { caption = it },
-                label = { Text("Caption") },
+                label = { Text("Deskripsi / Caption") },
+                placeholder = { Text("Ceritakan konsep, lokasi, suasana, atau layanan dari karya ini.") },
+                minLines = 4,
                 supportingText = { Text("Pakai #tagar supaya karyamu muncul di halaman tagar, dan @ untuk menyebut creator lain.") },
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -557,7 +567,7 @@ fun CreatorUploadScreen(
             ExposedDropdownMenuBox(expanded = categoryMenuExpanded, onExpandedChange = { categoryMenuExpanded = it }) {
                 OutlinedTextField(
                     value = category, onValueChange = {}, readOnly = true, label = { Text("Kategori") },
-                    modifier = Modifier.fillMaxWidth().menuAnchor(),
+                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
                 )
                 ExposedDropdownMenu(expanded = categoryMenuExpanded, onDismissRequest = { categoryMenuExpanded = false }) {
                     AppConstants.SERVICE_CATEGORIES.forEach { c ->
@@ -603,7 +613,7 @@ fun CreatorUploadScreen(
                         readOnly = true,
                         label = { Text("Paket yang dipakai (opsional)") },
                         supportingText = { Text("Muncul di kartu karya sebagai tombol booking langsung.") },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
                     )
                     ExposedDropdownMenu(expanded = menuPaket, onDismissRequest = { menuPaket = false }) {
                         DropdownMenuItem(
@@ -684,7 +694,7 @@ fun CreatorUploadScreen(
             PreviewPost(
                 uri = mediaUris.firstOrNull(),
                 isVideo = isVideo,
-                caption = caption,
+                        caption = buildString { if (judul.isNotBlank()) append("$judul\n\n"); append(caption.trim()) },
                 creatorName = authState.profile?.name ?: "Creator JepretAja",
                 location = lokasi,
                 packageName = paketDipilih?.name,

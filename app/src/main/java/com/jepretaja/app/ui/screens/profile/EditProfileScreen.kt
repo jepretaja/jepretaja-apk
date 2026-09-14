@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.jepretaja.app.core.theme.AppColors
+import com.jepretaja.app.data.model.IndonesianLocations
 import com.jepretaja.app.ui.components.AppAvatar
 import com.jepretaja.app.ui.components.AppTopBar
 import com.jepretaja.app.ui.components.BigPrimaryButton
@@ -47,10 +49,39 @@ fun EditProfileScreen(
     val profile = authState.profile
 
     var name by remember(profile?.userId) { mutableStateOf(profile?.name ?: "") }
+    var username by remember(profile?.userId) { mutableStateOf(profile?.username ?: "") }
     var phone by remember(profile?.userId) { mutableStateOf(profile?.phone ?: "") }
+    var dateOfBirth by remember(profile?.userId) { mutableStateOf(profile?.dateOfBirth ?: "") }
+    var gender by remember(profile?.userId) { mutableStateOf(profile?.gender ?: "") }
+    var address by remember(profile?.userId) { mutableStateOf(profile?.address ?: "") }
+    var city by remember(profile?.userId) { mutableStateOf(profile?.city ?: "") }
+    var province by remember(profile?.userId) { mutableStateOf(profile?.province ?: "") }
+    var bio by remember(profile?.userId) { mutableStateOf(profile?.bio ?: "") }
     var pickedPhoto by remember { mutableStateOf<Uri?>(null) }
     var saving by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
+    var provinceExpanded by remember { mutableStateOf(false) }
+    var cityExpanded by remember { mutableStateOf(false) }
+
+    val provinceOptions = remember { IndonesianLocations.provinces }
+    val cityOptions = remember(province) { IndonesianLocations.citiesForProvince(province) }
+
+    LaunchedEffect(profile?.userId) {
+        if (profile?.province?.isNotBlank() == true && province.isBlank()) province = profile.province ?: ""
+        if (profile?.city?.isNotBlank() == true && city.isBlank()) city = profile.city ?: ""
+    }
+
+    LaunchedEffect(province) {
+        if (province.isBlank()) {
+            city = ""
+            return@LaunchedEffect
+        }
+        if (cityOptions.isNotEmpty() && city.isBlank()) {
+            city = cityOptions.first()
+        } else if (cityOptions.isNotEmpty() && city !in cityOptions) {
+            city = cityOptions.first()
+        }
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -101,12 +132,123 @@ fun EditProfileScreen(
             Spacer(Modifier.height(12.dp))
             Column(Modifier.padding(horizontal = 20.dp)) {
                 OutlinedTextField(
-                    name, { name = it }, label = { Text("Nama") }, singleLine = true,
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nama lengkap") },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
-                    phone, { phone = it }, label = { Text("Nomor telepon") }, singleLine = true,
+                    value = username,
+                    onValueChange = { username = it.lowercase().replace(" ", "") },
+                    label = { Text("Nama pengguna") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("contoh: ahmad_putra") },
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("Nomor telepon") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = dateOfBirth,
+                    onValueChange = { dateOfBirth = it },
+                    label = { Text("Tanggal lahir") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("YYYY-MM-DD") },
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = gender,
+                    onValueChange = { gender = it },
+                    label = { Text("Jenis kelamin") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Laki-laki / Perempuan / Lainnya") },
+                )
+                Spacer(Modifier.height(12.dp))
+                ExposedDropdownMenuBox(
+                    expanded = provinceExpanded,
+                    onExpandedChange = { provinceExpanded = it },
+                ) {
+                    OutlinedTextField(
+                        value = province,
+                        onValueChange = { province = it },
+                        label = { Text("Provinsi") },
+                        singleLine = true,
+                        readOnly = false,
+                        modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryEditable),
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = provinceExpanded) },
+                    )
+                    ExposedDropdownMenu(
+                        expanded = provinceExpanded,
+                        onDismissRequest = { provinceExpanded = false },
+                    ) {
+                        provinceOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    province = option
+                                    city = if (cityOptions.isNotEmpty()) cityOptions.first() else ""
+                                    provinceExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                ExposedDropdownMenuBox(
+                    expanded = cityExpanded,
+                    onExpandedChange = { if (cityOptions.isNotEmpty()) cityExpanded = it },
+                ) {
+                    OutlinedTextField(
+                        value = city,
+                        onValueChange = { city = it },
+                        label = { Text("Kota") },
+                        singleLine = true,
+                        readOnly = false,
+                        enabled = cityOptions.isNotEmpty(),
+                        modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryEditable),
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cityExpanded) },
+                    )
+                    ExposedDropdownMenu(
+                        expanded = cityExpanded && cityOptions.isNotEmpty(),
+                        onDismissRequest = { cityExpanded = false },
+                    ) {
+                        cityOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    city = option
+                                    cityExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = address,
+                    onValueChange = { address = it },
+                    label = { Text("Alamat detail") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Contoh: Jl. Mawar No. 12, RT 02 RW 04") },
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = bio,
+                    onValueChange = { bio = it },
+                    label = { Text("Bio / Deskripsi singkat") },
+                    singleLine = false,
+                    minLines = 2,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(12.dp))
@@ -123,7 +265,7 @@ fun EditProfileScreen(
                 BigPrimaryButton(
                     text = "Simpan Perubahan",
                     loading = saving,
-                    enabled = name.isNotBlank(),
+                    enabled = name.isNotBlank() && username.isNotBlank(),
                     onClick = {
                         saving = true
                         viewModel.save(
@@ -136,7 +278,18 @@ fun EditProfileScreen(
                                 saving = false
                                 message = error
                             } else {
-                                authViewModel.updateProfile(name.trim(), phone.trim().ifBlank { null }, photoUrl) { saveError ->
+                                authViewModel.updateProfile(
+                                    name = name.trim(),
+                                    username = username.trim(),
+                                    phone = phone.trim().ifBlank { null },
+                                    dateOfBirth = dateOfBirth.trim().ifBlank { null },
+                                    gender = gender.trim().ifBlank { null },
+                                    address = address.trim().ifBlank { null },
+                                    city = city.trim().ifBlank { null },
+                                    province = province.trim().ifBlank { null },
+                                    bio = bio.trim().ifBlank { null },
+                                    photoUrl = photoUrl,
+                                ) { saveError ->
                                     saving = false
                                     message = saveError ?: "Profil tersimpan"
                                     if (saveError == null) pickedPhoto = null

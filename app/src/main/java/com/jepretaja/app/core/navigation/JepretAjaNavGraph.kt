@@ -53,6 +53,7 @@ import com.jepretaja.app.ui.screens.history.WatchHistoryScreen
 import com.jepretaja.app.ui.screens.interests.InterestsScreen
 import com.jepretaja.app.ui.screens.tag.TagFeedScreen
 import com.jepretaja.app.ui.screens.help.HelpScreen
+import com.jepretaja.app.ui.screens.home.MyBookingsScreen
 import com.jepretaja.app.ui.screens.myreports.MyReportsScreen
 import com.jepretaja.app.ui.screens.myreviews.MyReviewsScreen
 import com.jepretaja.app.ui.screens.notifications.NotificationsScreen
@@ -463,7 +464,14 @@ fun JepretAjaNavGraph(
                 onFavorites = { navController.navigate(Routes.FAVORITES) },
                 onHelp = { navController.navigate(Routes.HELP) },
                 onCreatorBank = { navController.navigate(Routes.CREATOR_BANK_ACCOUNT) },
+                onCreatorStudio = { navController.navigate(Routes.CREATOR_DASHBOARD) },
                 onLoggedOut = { navController.navigate(Routes.CHOOSE_ACCESS) { popUpTo(0) } },
+                authViewModel = authViewModel,
+            )
+        }
+        composable(Routes.MY_BOOKINGS) {
+            MyBookingsScreen(
+                onBookingClick = { bookingId -> navController.navigate(Routes.bookingDetail(bookingId)) },
                 authViewModel = authViewModel,
             )
         }

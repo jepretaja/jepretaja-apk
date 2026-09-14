@@ -12,6 +12,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Search
@@ -27,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.core.util.AppConstants
+import com.jepretaja.app.ui.components.ErrorState
 import com.jepretaja.app.ui.screens.chat.SendToChatSheet
 import com.jepretaja.app.ui.screens.explore.ExploreCommentsSheet
 import com.jepretaja.app.ui.state.AuthViewModel
@@ -64,6 +67,8 @@ fun ExploreScreen(
     var commentsPostId by remember { mutableStateOf<String?>(null) }
     val habis by viewModel.habis.collectAsState()
     val kecepatan by viewModel.kecepatan.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val feedError by viewModel.error.collectAsState()
     val saranCreator by viewModel.saranCreator.collectAsState()
 
     // Tab "Following" perlu tahu siapa yang sedang masuk untuk bisa menyaring.
@@ -109,7 +114,16 @@ fun ExploreScreen(
     }
 
     Box(Modifier.fillMaxSize().background(AppColors.ExploreBackground)) {
-        if (posts.isEmpty() && activeTab == "Following" && saranCreator.isNotEmpty()) {
+        if (feedError != null) {
+            ErrorState(
+                title = "Feed gagal dimuat",
+                description = feedError ?: "Terjadi masalah saat mengambil konten. Pastikan koneksi internet Anda stabil lalu coba lagi.",
+                onRetry = { viewModel.retryLoad() },
+                modifier = Modifier.align(Alignment.Center),
+            )
+        } else if (isLoading && posts.isEmpty()) {
+            ExploreFeedSkeleton(modifier = Modifier.fillMaxSize())
+        } else if (posts.isEmpty() && activeTab == "Following" && saranCreator.isNotEmpty()) {
             // Layar kosong pada tab Following adalah jalan buntu: pengguna
             // diminta mengikuti seseorang tanpa diberi satu pun nama untuk
             // mulai. Jadi ruang kosongnya diisi saran, bukan kalimat penjelasan.
@@ -184,8 +198,10 @@ fun ExploreScreen(
 
             // Muat lagi begitu tersisa tiga halaman — cukup jauh supaya
             // pengambilannya selesai sebelum pengguna sampai ke ujung.
-            LaunchedEffect(pagerState.currentPage, posts.size) {
-                if (!habis && pagerState.currentPage >= posts.size - 3) viewModel.muatLagi()
+            LaunchedEffect(pagerState.currentPage, posts.size, isLoading, habis) {
+                if (!habis && !isLoading && pagerState.currentPage >= maxOf(0, posts.size - 3)) {
+                    viewModel.muatLagi()
+                }
             }
 
             // Hitung tayangan untuk post yang benar-benar berhenti di layar.
@@ -423,5 +439,43 @@ fun ExploreScreen(
             onLoginRequired = onLoginRequired,
             onDismiss = { commentsPostId = null },
         )
+    }
+}
+
+@Composable
+private fun ExploreFeedSkeleton(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        repeat(3) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(420.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Color.White.copy(alpha = 0.08f)),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f)),
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(7.dp))
+                        .background(Color.White.copy(alpha = 0.08f)),
+                )
+            }
+        }
     }
 }

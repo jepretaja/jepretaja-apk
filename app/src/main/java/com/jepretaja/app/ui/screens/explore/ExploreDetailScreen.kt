@@ -16,13 +16,17 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.core.util.FirestorePaths
+import com.jepretaja.app.data.model.ExplorePostModel
 import com.jepretaja.app.ui.components.AppAvatar
 import com.jepretaja.app.ui.components.EmptyState
 import com.jepretaja.app.ui.components.PremiumCard
@@ -228,7 +232,9 @@ fun ExploreDetailScreen(
         },
     ) { padding ->
         if (comments.isEmpty()) {
-            Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(Modifier.padding(padding).fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                PostPreview(post)
+                Spacer(Modifier.height(16.dp))
                 EmptyState(icon = Icons.Default.ChatBubbleOutline, title = "Belum ada komentar", description = "Jadilah yang pertama berkomentar di post ini.")
             }
         } else {
@@ -237,6 +243,7 @@ fun ExploreDetailScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                item { PostPreview(post) }
                 // Pemilih urutan ikut menggulir bersama daftarnya: menempelkannya
                 // permanen di atas hanya memakan tinggi layar yang seharusnya
                 // dipakai membaca komentar.
@@ -309,6 +316,23 @@ fun ExploreDetailScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun PostPreview(post: ExplorePostModel?) {
+    if (post == null) return
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        AsyncImage(
+            model = post.thumbnailUrl ?: post.mediaUrls.firstOrNull(),
+            contentDescription = post.caption.ifBlank { "Karya" },
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(16.dp)),
+        )
+        Text(post.creatorName, style = MaterialTheme.typography.titleSmall, color = AppColors.TextPrimary)
+        if (post.caption.isNotBlank()) {
+            Text(post.caption, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextPrimary)
         }
     }
 }

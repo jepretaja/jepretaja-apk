@@ -1,5 +1,6 @@
 package com.jepretaja.app.data.repository
 
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -51,15 +52,27 @@ class NotificationRepository @Inject constructor(private val db: FirebaseFiresto
     }
 
     suspend fun markAllRead(userId: String) {
-        val snapshot = db.collection(FirestorePaths.NOTIFICATIONS)
-            .whereEqualTo("userId", userId)
-            .whereEqualTo("readAt", null)
-            .limit(100)
-            .get().await()
+        var lastDoc: DocumentSnapshot? = null
         val batch = db.batch()
-        snapshot.documents.forEach { doc ->
-            batch.update(doc.reference, "readAt", FieldValue.serverTimestamp())
-        }
-        batch.commit().await()
+        var processed = 0
+        var hasOps = false
+
+        do {
+            val query = db.collection(FirestorePaths.NOTIFICATIONS)
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("readAt", null)
+                .limit(100)
+            val snapshot = if (lastDoc == null) query.get().await() else query.startAfter(lastDoc).get().await()
+            if (snapshot.isEmpty) break
+
+            snapshot.documents.forEach { doc ->
+                batch.update(doc.reference, "readAt", FieldValue.serverTimestamp())
+                hasOps = true
+            }
+            processed += snapshot.documents.size
+            lastDoc = snapshot.documents.last()
+        } while (processed % 100 == 0 && processed > 0)
+
+        if (hasOps) batch.commit().await()
     }
 }

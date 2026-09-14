@@ -195,45 +195,14 @@ fun ExplorePostCard(
                 ),
         )
 
-        // Info creator + caption + CTA
+        // Booking ditempatkan paling awal agar harga dan aksi utama terlihat
+        // sebelum identitas creator, seperti pola commerce pada feed video.
         Column(
             Modifier.align(Alignment.BottomStart).padding(start = 14.dp, end = 84.dp, bottom = 22.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.combinedClickable(onClick = onCreatorClick)) {
-                AppAvatar(url = post.creatorPhotoUrl, name = post.creatorName, size = 34.dp)
-                Spacer(Modifier.width(8.dp))
-                Text("@${post.creatorName}", color = Color.White, fontWeight = FontWeight.W700)
-                if (post.creatorVerified) {
-                    Spacer(Modifier.width(4.dp))
-                    Icon(Icons.Default.Verified, contentDescription = null, tint = Color(0xFF64B5F6), modifier = Modifier.size(15.dp))
-                }
-                // Tombol follow disembunyikan di post sendiri, dan berubah jadi
-                // "Mengikuti" begitu benar-benar diikuti — sebelumnya selalu
-                // tertulis "Follow" walau sudah difollow, dan menekannya berkali-kali
-                // menggelembungkan followerCount.
-                if (!isOwner) {
-                    Spacer(Modifier.width(10.dp))
-                    OutlinedButton(
-                        onClick = onFollow,
-                        modifier = Modifier.height(30.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp),
-                        shape = RoundedCornerShape(percent = 50),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = if (following) Color.Black else Color.White,
-                            containerColor = if (following) Color.White else Color.Transparent,
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.85f)),
-                    ) { Text(if (following) "Mengikuti" else "Follow", style = MaterialTheme.typography.labelSmall) }
-                }
-            }
-            Spacer(Modifier.height(10.dp))
-            // Tombol pesan langsung dari feed. Ini yang membedakan JepretAja dari
-            // feed sosial biasa: orang yang terpikat sebuah foto bisa langsung
-            // memesan paket yang menghasilkannya, tanpa harus menebak lewat
-            // profil dan daftar paket.
             post.packageId?.let { idPaket ->
                 Row(
-                    Modifier.padding(bottom = 8.dp)
+                    Modifier.padding(bottom = 10.dp)
                         .clip(RoundedCornerShape(percent = 50))
                         .background(AppColors.Primary)
                         .clickable { onPackageClick(idPaket) }
@@ -256,17 +225,52 @@ fun ExplorePostCard(
                     )
                 }
             }
-
-            CaptionText(
-                caption = post.caption,
-                mentions = post.mentions.mapNotNull { m ->
-                    val nama = m["name"]; val id = m["creatorId"]
-                    if (nama != null && id != null) nama to id else null
-                }.toMap(),
-                onTagClick = onTagClick,
-                onMentionClick = onMentionClick,
-                maxLines = 2,
-            )
+                val bagianJudul = post.caption.substringBefore("\n\n").trim()
+                val bagianDeskripsi = post.caption.substringAfter("\n\n", missingDelimiterValue = post.caption).trim()
+                if (post.caption.contains("\n\n") && bagianJudul.isNotBlank()) {
+                    Text(
+                        bagianJudul,
+                        color = Color.White,
+                        fontWeight = FontWeight.W800,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    )
+                }
+                CaptionText(
+                    caption = bagianDeskripsi,
+                    mentions = post.mentions.mapNotNull { m ->
+                        val nama = m["name"]; val id = m["creatorId"]
+                        if (nama != null && id != null) nama to id else null
+                    }.toMap(),
+                    onTagClick = onTagClick,
+                    onMentionClick = onMentionClick,
+                    maxLines = 2,
+                )
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.combinedClickable(onClick = onCreatorClick)) {
+                AppAvatar(url = post.creatorPhotoUrl, name = post.creatorName, size = 34.dp)
+                Spacer(Modifier.width(8.dp))
+                Text("@${post.creatorName}", color = Color.White, fontWeight = FontWeight.W700)
+                if (post.creatorVerified) {
+                    Spacer(Modifier.width(4.dp))
+                    Icon(Icons.Default.Verified, contentDescription = null, tint = Color(0xFF64B5F6), modifier = Modifier.size(15.dp))
+                }
+                if (!isOwner) {
+                    Spacer(Modifier.width(10.dp))
+                    OutlinedButton(
+                        onClick = onFollow,
+                        modifier = Modifier.height(30.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp),
+                        shape = RoundedCornerShape(percent = 50),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = if (following) Color.Black else Color.White,
+                            containerColor = if (following) Color.White else Color.Transparent,
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.85f)),
+                    ) { Text(if (following) "Mengikuti" else "Follow", style = MaterialTheme.typography.labelSmall) }
+                }
+            }
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -285,12 +289,17 @@ fun ExplorePostCard(
             }
             Spacer(Modifier.height(12.dp))
             Button(
-                onClick = onCreatorClick,
+                onClick = { post.packageId?.let(onPackageClick) ?: onCreatorClick() },
                 colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
                 contentPadding = PaddingValues(horizontal = 18.dp),
                 shape = RoundedCornerShape(percent = 50),
                 modifier = Modifier.height(36.dp),
-            ) { Text("Lihat & Booking", style = MaterialTheme.typography.labelMedium) }
+            ) {
+                Text(
+                    if (post.packagePrice != null) "Booking · ${Formatters.currency(post.packagePrice)}" else "Lihat & Booking",
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
         }
 
         // Action rail kanan
