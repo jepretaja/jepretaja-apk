@@ -39,9 +39,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import coil.request.ImageRequest
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.jepretaja.app.core.theme.AppColors
@@ -305,7 +307,11 @@ private fun PostGrid(posts: List<ExplorePostModel>, onPostClick: (String) -> Uni
                             .clickable { onPostClick(post.postId) },
                     ) {
                         AsyncImage(
-                            model = post.thumbnailUrl ?: post.mediaUrls.firstOrNull(),
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(post.thumbnailUrl ?: post.mediaUrls.firstOrNull())
+                                .size(480, 270)
+                                .crossfade(false)
+                                .build(),
                             contentDescription = post.caption,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),

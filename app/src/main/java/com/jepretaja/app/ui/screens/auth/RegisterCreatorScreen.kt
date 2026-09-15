@@ -151,7 +151,12 @@ fun RegisterCreatorScreen(
                 }
             }
             Spacer(Modifier.height(14.dp))
-            OutlinedTextField(address, { address = it }, label = { Text("Alamat Studio / Domisili") }, minLines = 2, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
+            LocationField(
+                value = address,
+                onValueChange = { address = it },
+                label = "Alamat Studio / Domisili",
+                placeholder = "Pilih dari lokasi saya atau ketik alamat lengkap",
+            )
             Spacer(Modifier.height(14.dp))
             OutlinedTextField(
                 password, { password = it }, label = { Text("Password") },

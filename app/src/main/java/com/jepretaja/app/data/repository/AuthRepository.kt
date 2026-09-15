@@ -7,6 +7,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.jepretaja.app.core.util.FirestorePaths
 import com.jepretaja.app.data.model.UserModel
+import com.jepretaja.app.data.remote.ApiClient
+import com.jepretaja.app.core.util.CloudFunctions
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -25,6 +27,7 @@ class AuthRepository @Inject constructor(
     private val db: FirebaseFirestore,
     private val exploreRepository: ExploreRepository,
     private val messaging: FirebaseMessaging,
+    private val api: ApiClient,
 ) {
     val currentUser: FirebaseUser? get() = auth.currentUser
 
@@ -43,6 +46,10 @@ class AuthRepository @Inject constructor(
     suspend fun login(email: String, password: String) {
         auth.signInWithEmailAndPassword(email, password).await()
         syncFcmToken()
+    }
+
+    suspend fun becomeCreator() {
+        api.call(CloudFunctions.BECOME_CREATOR)
     }
 
     suspend fun registerCustomer(name: String, email: String, password: String, phone: String?, address: String?, city: String?, province: String?) {

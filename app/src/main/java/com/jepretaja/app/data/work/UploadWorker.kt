@@ -180,11 +180,14 @@ class UploadWorker(
                 )
             }
         } catch (e: Exception) {
-            UploadNotifier.failure(applicationContext, id.toString(), "Upload tidak dapat diproses.")
+            val detail = e.message?.takeIf { it.isNotBlank() }
+                ?: "Upload tidak dapat diproses."
+            UploadNotifier.failure(applicationContext, id.toString(), detail)
             gagalkan(
                 caption, category, target, uris, isVideo,
                 location, commentPolicy, allowSave, allowLike, allowDownload, showLikeCount,
                 visibility, packageId, packageName, packagePrice, coverUri,
+                pesan = detail,
             )
         }
     }

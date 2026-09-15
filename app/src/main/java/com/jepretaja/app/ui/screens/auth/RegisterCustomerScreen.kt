@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.jepretaja.app.core.theme.AppColors
 import com.jepretaja.app.data.model.IndonesianLocations
 import com.jepretaja.app.ui.components.BigPrimaryButton
+import com.jepretaja.app.ui.components.LocationField
 import com.jepretaja.app.ui.state.AuthActionsViewModel
 
 @Composable
@@ -146,7 +147,12 @@ fun RegisterCustomerScreen(
                 }
             }
             Spacer(Modifier.height(14.dp))
-            OutlinedTextField(address, { address = it }, label = { Text("Alamat Lengkap") }, minLines = 2, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth())
+            LocationField(
+                value = address,
+                onValueChange = { address = it },
+                label = "Alamat Lengkap",
+                placeholder = "Pilih dari lokasi saya atau ketik alamat lengkap",
+            )
             Spacer(Modifier.height(14.dp))
             OutlinedTextField(
                 password, { password = it }, label = { Text("Password") },

@@ -61,10 +61,13 @@ object GeocoderHelper {
      */
     private fun rangkai(a: Address): String {
         val bagian = listOfNotNull(
+            a.subThoroughfare,                  // nomor jalan
             a.thoroughfare ?: a.featureName,   // nama jalan
             a.subLocality,                      // kelurahan/kawasan
-            a.locality ?: a.subAdminArea,       // kota/kabupaten
+            a.subAdminArea,                     // kecamatan/kabupaten
+            a.locality,                         // kota
             a.adminArea,                        // provinsi
+            a.postalCode,                       // kode pos
         ).distinct().filter { it.isNotBlank() }
 
         return if (bagian.isEmpty()) {

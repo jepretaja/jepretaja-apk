@@ -125,6 +125,14 @@ class AuthViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(profile = profile)
     }
 
+    fun becomeCreator(onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            val result = runCatching { authRepository.becomeCreator() }
+            if (result.isSuccess) refreshProfile()
+            onResult(result.exceptionOrNull()?.message)
+        }
+    }
+
     /** Simpan perubahan profil sendiri, lalu segarkan state supaya seluruh
      * layar (header profil, nama di chat, dst) langsung ikut berubah. */
     fun updateProfile(

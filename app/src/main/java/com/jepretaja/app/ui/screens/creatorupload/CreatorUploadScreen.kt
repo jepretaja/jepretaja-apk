@@ -317,6 +317,12 @@ fun CreatorUploadScreen(
     }) { padding ->
         // Hanya creator yang boleh mengunggah. Penjagaan ditaruh di layarnya
         // sendiri supaya jalur masuk lain (deep link, back stack) tidak lolos.
+        if (authState.loading) {
+            Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = AppColors.Primary)
+            }
+            return@Scaffold
+        }
         if (!authState.isCreator) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
                 EmptyState(

@@ -57,6 +57,7 @@ object CloudFunctions {
     const val UNBLOCK_AVAILABILITY_DATE = "unblockAvailabilityDate"
     const val REQUEST_WITHDRAWAL = "requestWithdrawal"
     const val NOTIFY_INTERACTION = "notifyInteraction"
+    const val BECOME_CREATOR = "becomeCreator"
 }
 
 object AppConstants {

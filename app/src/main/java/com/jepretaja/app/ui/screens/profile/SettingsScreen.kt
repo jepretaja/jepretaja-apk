@@ -181,6 +181,12 @@ fun SettingsScreen(
             SettingsSection("Booking & Pembayaran", Icons.Default.Payment) {
                 if (authState.isCreator) {
                     SettingRow(Icons.Default.Dashboard, "Creator Studio", "Kelola karya, booking, paket, dan pendapatan", onCreatorStudio)
+                } else {
+                    SettingRow(Icons.Default.Dashboard, "Daftar sebagai Creator", "Tampilkan karya dan terima booking dari pelanggan", onClick = {
+                        authViewModel.becomeCreator { pesan ->
+                            actionMessage = pesan ?: "Mode creator aktif. Creator Studio sudah tersedia."
+                        }
+                    })
                 }
                 SettingRow(Icons.Default.Payment, "Metode pembayaran", "Kelola metode tersimpan", { showComingSoon = "Metode pembayaran" })
                 SettingRow(Icons.Default.History, "Riwayat pembayaran", "Invoice dan status transaksi", { showComingSoon = "Riwayat pembayaran" })
